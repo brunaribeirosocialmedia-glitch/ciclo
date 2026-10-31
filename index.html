@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#0f0f13" />
+<title>Ciclo — Treino que respeita o seu corpo</title>
+<style>
+  :root {
+    --bg: #0f0f13; --surface: #1a1a24; --surface2: #22222f; --border: #2e2e3e;
+    --accent: #c084fc; --accent2: #818cf8; --accent3: #34d399; --accent4: #fb923c;
+    --text: #f1f0f5; --muted: #8b8a9b; --danger: #f87171;
+    --phase-menstrual: #f87171; --phase-folicular: #34d399;
+    --phase-ovulatoria: #fbbf24; --phase-lutea: #c084fc;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  button, input, select, textarea { font-family: inherit; }
+
+  /* ── LANDING ── */
+  .landing { min-height: 100vh; display: flex; flex-direction: column; padding: 40px 24px; max-width: 640px; margin: 0 auto; }
+  .landing-logo { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 32px; }
+  .landing-logo span { color: var(--accent); }
+  .landing-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 24px 0; }
+  .landing-title { font-size: clamp(28px, 6vw, 38px); font-weight: 800; line-height: 1.15; margin-bottom: 14px; letter-spacing: -0.02em; }
+  .landing-title em { color: var(--accent); font-style: normal; }
+  .landing-sub { font-size: 16px; color: var(--muted); line-height: 1.55; margin-bottom: 32px; max-width: 480px; }
+  .landing-pillars { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 36px; }
+  .pillar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; gap: 14px; align-items: center; }
+  .pillar-icon { font-size: 26px; flex-shrink: 0; }
+  .pillar-title { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+  .pillar-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .landing-cta { display: flex; flex-direction: column; gap: 10px; }
+  .btn-primary { background: var(--accent); color: #1a1a24; border: none; border-radius: 10px; padding: 16px; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .2s; }
+  .btn-primary:hover { opacity: .88; }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 14px; font-size: 14px; cursor: pointer; }
+  .btn-ghost:hover { background: var(--surface); }
+  .existing-profiles { margin-top: 18px; }
+  .profile-pick { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s; }
+  .profile-pick:hover { border-color: var(--accent); }
+  .profile-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: #1a1a24; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .profile-pick-info { flex: 1; min-width: 0; }
+  .profile-pick-name { font-weight: 600; font-size: 14px; }
+  .profile-pick-meta { font-size: 12px; color: var(--muted); }
+  .profile-delete-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 4px 8px; font-size: 16px; }
+  .profile-delete-btn:hover { color: var(--danger); }
+
+  /* ── ONBOARDING ── */
+  .onboarding-bg { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 1000; overflow-y: auto; }
+  .onboarding-bg.open { display: flex; }
+  .onboarding { width: 100%; max-width: 520px; margin: 0 auto; padding: 32px 24px; min-height: 100vh; display: flex; flex-direction: column; }
+  .ob-progress { display: flex; gap: 6px; margin-bottom: 28px; }
+  .ob-progress-step { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; transition: background .2s; }
+  .ob-progress-step.done { background: var(--accent); }
+  .ob-step { flex: 1; display: none; }
+  .ob-step.active { display: flex; flex-direction: column; }
+  .ob-step h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .ob-step .ob-hint { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+  .ob-actions { display: flex; gap: 10px; margin-top: 24px; padding-bottom: 16px; }
+  .ob-actions button { flex: 1; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+  .ob-back { background: var(--surface); color: var(--text); border: 1px solid var(--border) !important; }
+  .ob-next, .ob-finish { background: var(--accent); color: #1a1a24; }
+  .ob-skip { background: transparent; color: var(--muted); border: 1px solid var(--border) !important; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .field-group input, .field-group select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 14px 14px; font-size: 16px; outline: none; transition: border-color .2s; }
+  .field-group input:focus, .field-group select:focus { border-color: var(--accent); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Goal cards in onboarding */
+  .goal-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .goal-card { background: var(--surface2); border: 2px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; transition: all .15s; }
+  .goal-card.selected { border-color: var(--accent); background: #2a1a4e; }
+  .goal-card-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .goal-card-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+  /* Food preferences */
+  .food-section { margin-bottom: 18px; }
+  .food-section-title { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .food-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .food-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 99px; padding: 8px 14px; font-size: 13px; cursor: pointer; transition: all .15s; user-select: none; }
+  .food-chip.disliked { background: #3b0f0f; border-color: var(--danger); color: var(--danger); text-decoration: line-through; }
+
+  /* ── APP ── */
+  .app { display: none; }
+  .app.active { display: block; }
+
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 12px; }
+  .logo { font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+  .logo span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .header-meta { color: var(--muted); font-size: 12px; }
+  .phase-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
+  .header-menu-btn { background: var(--accent); color: #1a1a24; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-weight: 700; flex-shrink: 0; }
+
+  .header-menu { display: none; position: absolute; top: 60px; right: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; min-width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 200; overflow: hidden; }
+  .header-menu.open { display: block; }
+  .header-menu-item { padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .header-menu-item:last-child { border-bottom: none; }
+  .header-menu-item:hover { background: var(--surface2); }
+  .header-menu-item.danger { color: var(--danger); }
+
+  nav { display: flex; gap: 4px; background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0 8px; overflow-x: auto; scrollbar-width: none; }
+  nav::-webkit-scrollbar { display: none; }
+  nav button { background: none; border: none; color: var(--muted); padding: 14px 14px; cursor: pointer; font-size: 13px; font-weight: 600; border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; }
+  nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  nav button:hover:not(.active) { color: var(--text); }
+
+  main { padding: 16px; max-width: 960px; margin: 0 auto; padding-bottom: 80px; }
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+  .card-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  .tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+  .tag-purple { background: #3b1f6e; color: var(--accent); }
+  .tag-green  { background: #0f3727; color: var(--accent3); }
+  .tag-orange { background: #3b2008; color: var(--accent4); }
+  .tag-blue   { background: #1e2150; color: var(--accent2); }
+  .tag-red    { background: #3b0f0f; color: var(--phase-menstrual); }
+  .tag-yellow { background: #3b2f0a; color: var(--phase-ovulatoria); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  @media (min-width: 720px) {
+    .grid2 { grid-template-columns: 1fr 1fr; }
+  }
+
+  .stat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  @media (min-width: 600px) { .stat-row { grid-template-columns: repeat(4, 1fr); } }
+  .stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 800; }
+  .stat-unit  { font-size: 11px; color: var(--muted); margin-left: 2px; }
+
+  .phase-banner { border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; border: 1px solid; display: flex; align-items: center; gap: 12px; }
+  .phase-banner .ph-icon { font-size: 28px; flex-shrink: 0; }
+  .phase-banner .ph-title { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
+  .phase-banner .ph-sub { font-size: 12px; opacity: .85; line-height: 1.4; }
+  .phase-banner .ph-day { font-size: 11px; opacity: .7; margin-top: 4px; }
+
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 16px; }
+  .day { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 2px; text-align: center; transition: all .2s; }
+  .day.active { border-color: var(--accent); background: #2a1a4e; }
+  .day.rest { opacity: .55; }
+  .day.menstrual-day { border-color: var(--phase-menstrual) !important; background: #2a0f0f; }
+  .day-name { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .day-type { font-size: 10px; font-weight: 700; }
+  .day-type.train { color: var(--accent); }
+  .day-type.rest2 { color: var(--accent3); }
+  .day-type.light { color: var(--phase-menstrual); }
+
+  .ex-list { list-style: none; }
+  .ex-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 10px; }
+  .ex-item:last-child { border-bottom: none; }
+  .ex-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .ex-icon { width: 32px; height: 32px; background: var(--surface2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .ex-name { font-size: 13px; font-weight: 600; }
+  .ex-muscle { font-size: 11px; color: var(--muted); }
+  .ex-sets { font-size: 12px; color: var(--accent); font-weight: 700; white-space: nowrap; }
+
+  .phase-mod { font-size: 12px; padding: 10px 14px; border-radius: 8px; margin-top: 12px; line-height: 1.5; }
+
+  .check-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer; }
+  .check-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .check-row label { cursor: pointer; font-size: 13px; line-height: 1.4; }
+  .check-row.done label { text-decoration: line-through; color: var(--muted); }
+
+  /* Macros */
+  .macro-bar { margin-bottom: 12px; }
+  .macro-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+  .bar-track { height: 8px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 99px; }
+  .bar-prot { background: var(--accent); }
+  .bar-carb { background: var(--accent2); }
+  .bar-fat  { background: var(--accent4); }
+  .meal-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .meal-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .meal-items { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .meal-tip   { font-size: 11px; color: var(--accent3); margin-top: 6px; }
+
+  /* Menu options */
+  .menu-options { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 14px; }
+  .menu-option { background: var(--surface2); border: 2px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; transition: all .15s; }
+  .menu-option.selected { border-color: var(--accent3); background: #0f3727; }
+  .menu-option-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+  .menu-option-badge { font-size: 10px; color: var(--muted); }
+  .menu-option-meals { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .menu-option-meals strong { color: var(--text); font-weight: 600; }
+
+  .tip-card { display: flex; gap: 10px; align-items: flex-start; padding: 12px; background: var(--surface2); border-radius: 10px; margin-bottom: 8px; }
+  .tip-icon { font-size: 20px; flex-shrink: 0; }
+  .tip-body { font-size: 12px; line-height: 1.5; }
+  .tip-title { font-weight: 700; margin-bottom: 3px; font-size: 13px; }
+
+  /* Progress */
+  .compare-card { background: var(--surface2); border-radius: 10px; padding: 14px; }
+  .compare-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-label { font-size: 13px; color: var(--muted); }
+  .compare-values { display: flex; gap: 10px; align-items: center; }
+  .compare-cur { font-size: 14px; font-weight: 700; }
+  .compare-arr { color: var(--muted); font-size: 11px; }
+  .compare-goal { font-size: 14px; font-weight: 700; color: var(--accent3); }
+  .progress-bar { width: 100%; height: 6px; background: var(--surface); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 99px; transition: width .4s; }
+
+  .input-group { margin-bottom: 12px; }
+  .input-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  .input-group input, .input-group select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 14px; outline: none; }
+  .input-group input:focus, .input-group select:focus { border-color: var(--accent); }
+  .stepper { display: flex; align-items: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: border-color .2s; }
+  .stepper:focus-within { border-color: var(--accent); }
+  .stepper-btn { background: var(--surface); border: none; color: var(--text); width: 44px; height: 46px; font-size: 22px; cursor: pointer; flex-shrink: 0; transition: background .15s; }
+  .stepper-btn:hover { background: var(--border); }
+  .stepper input { flex: 1; background: transparent; border: none; color: var(--text); text-align: center; font-size: 16px; padding: 10px 0; outline: none; min-width: 0; }
+  .btn { background: var(--accent); color: #1a1a24; border: none; border-radius: 8px; padding: 12px 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity .2s; width: 100%; }
+  .btn:hover { opacity: .85; }
+  .btn-sm { padding: 8px 14px; font-size: 12px; width: auto; }
+  .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+  .log-entry { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12px; gap: 10px; }
+  .log-date { color: var(--muted); }
+  .log-val  { font-weight: 700; color: var(--accent3); }
+
+  /* Pain & mood */
+  .pain-slider-wrap { padding: 8px 0; }
+  .pain-scale { display: flex; gap: 6px; margin-bottom: 8px; }
+  .pain-dot { flex: 1; height: 40px; border-radius: 8px; background: var(--surface2); border: 2px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; transition: all .15s; }
+  .pain-dot.selected { transform: scale(1.05); }
+  .pain-dot[data-level="0"], .pain-dot[data-level="1"], .pain-dot[data-level="2"] { color: var(--accent3); }
+  .pain-dot[data-level="0"].selected, .pain-dot[data-level="1"].selected, .pain-dot[data-level="2"].selected { background: #0f3727; border-color: var(--accent3); }
+  .pain-dot[data-level="3"], .pain-dot[data-level="4"], .pain-dot[data-level="5"] { color: var(--accent4); }
+  .pain-dot[data-level="3"].selected, .pain-dot[data-level="4"].selected, .pain-dot[data-level="5"].selected { background: #3b2008; border-color: var(--accent4); }
+  .pain-dot[data-level="6"], .pain-dot[data-level="7"] { color: var(--phase-ovulatoria); }
+  .pain-dot[data-level="6"].selected, .pain-dot[data-level="7"].selected { background: #3b2f0a; border-color: var(--phase-ovulatoria); }
+  .pain-dot[data-level="8"], .pain-dot[data-level="9"], .pain-dot[data-level="10"] { color: var(--danger); }
+  .pain-dot[data-level="8"].selected, .pain-dot[data-level="9"].selected, .pain-dot[data-level="10"].selected { background: #3b0f0f; border-color: var(--danger); }
+  .pain-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: -4px; }
+
+  .mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .mood-btn { background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; padding: 12px 4px; cursor: pointer; text-align: center; transition: all .15s; }
+  .mood-btn.selected { border-color: var(--accent); background: #2a1a4e; }
+  .mood-emoji { font-size: 24px; margin-bottom: 4px; }
+  .mood-name { font-size: 10px; color: var(--muted); }
+  .mood-btn.selected .mood-name { color: var(--accent); font-weight: 700; }
+
+  .pain-adapt-notice { background: #3b0f0f; border: 1px solid var(--phase-menstrual); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; color: var(--phase-menstrual); line-height: 1.5; }
+
+  .phases-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 14px; }
+  @media (min-width: 720px) { .phases-grid { grid-template-columns: repeat(2, 1fr); } }
+  .phase-card { border-radius: 10px; padding: 14px; border: 2px solid; }
+  .phase-card.current { box-shadow: 0 0 0 2px #fff3; }
+  .phase-card-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .phase-card-days { font-size: 11px; opacity: .7; margin-bottom: 8px; }
+  .phase-card-body { font-size: 12px; line-height: 1.5; opacity: .85; }
+
+  /* Profile tab */
+  .profile-section-title { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 18px 0 10px; }
+  .profile-section-title:first-child { margin-top: 0; }
+  .preference-summary { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+  .preference-summary .liked, .preference-summary .disliked { display: inline-block; margin: 2px 4px 2px 0; padding: 3px 8px; border-radius: 99px; font-size: 11px; }
+  .preference-summary .liked { background: #0f3727; color: var(--accent3); }
+  .preference-summary .disliked { background: #3b0f0f; color: var(--danger); text-decoration: line-through; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 480px) {
+    main { padding: 14px; }
+    header { padding: 12px 14px; }
+    .header-meta { display: none; }
+  }
+
+  /* ── EXERCISE MEDIA ── */
+  .ex-media-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .ex-media-row:last-child { border-bottom: none; }
+  .ex-media-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .ex-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 6px 0 5px; }
+  .ex-mistake { font-size: 11px; color: var(--accent4); background: rgba(251,146,60,.1); border-left: 2px solid var(--accent4); padding: 5px 10px; border-radius: 0 6px 6px 0; margin-bottom: 4px; }
+  .ex-tip-line { font-size: 10px; color: var(--accent3); margin-top: 4px; }
+
+  /* ── RETOMADA E HISTÓRICO ── */
+  .retomada-box { background: #0f3727; border: 1px solid var(--accent3); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.5; color: var(--text); }
+  .retomada-box strong { color: var(--accent3); }
+  .link-btn { background: none; border: none; color: var(--muted); font-size: 11px; text-decoration: underline; cursor: pointer; padding: 0; }
+  .feito-box { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+  .feito-ok { background: #0f3727; color: var(--accent3); border-radius: 8px; padding: 12px; font-size: 13px; font-weight: 700; text-align: center; }
+  .hist-semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px; }
+  .hist-dia { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 2px; text-align: center; font-size: 10px; color: var(--muted); }
+  .hist-dia b { display: block; font-size: 14px; margin-top: 2px; color: var(--border); }
+  .hist-dia.feito { border-color: var(--accent3); background: #0f3727; color: var(--accent3); }
+  .hist-dia.feito b { color: var(--accent3); }
+  .hist-dia.hoje { border-color: var(--accent); }
+  .hist-titulo { font-size: 12px; font-weight: 700; color: var(--muted); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+  .hist-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-item-top { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 600; }
+  .hist-item-top span { color: var(--muted); font-weight: 400; font-size: 11px; white-space: nowrap; }
+  .hist-ex { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 3px; }
+  .day .feito-marca { font-size: 10px; color: var(--accent3); margin-top: 2px; }
+
+  /* ── AUTH GATE ── */
+  .auth-gate { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 3000; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; }
+  .auth-gate.open { display: flex; }
+  .auth-gate-logo { font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 40px; }
+  .auth-gate-logo span { color: var(--accent); }
+  .auth-gate-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px 28px; width: 100%; max-width: 380px; text-align: center; }
+  .auth-gate-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .auth-gate-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.55; }
+  .auth-footer { font-size: 11px; color: var(--muted); margin-top: 20px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ AUTH GATE ════════════════ -->
+<div class="auth-gate" id="auth-gate">
+  <div class="auth-gate-logo">Ci<span>clo</span></div>
+  <div class="auth-gate-card">
+    <div class="auth-gate-title" id="auth-title">Bem-vinda de volta</div>
+    <p class="auth-gate-sub" id="auth-sub">Entre com seu e-mail e senha para acessar o app.</p>
+    <div id="auth-error" style="color:var(--danger);font-size:13px;margin-bottom:12px;background:#3b0f0f;border:1px solid var(--danger);border-radius:8px;padding:10px 12px;display:none"></div>
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px">E-mail</label>
+      <input type="email" id="auth-email" placeholder="seu@email.com" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:13px 14px;font-size:15px;outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')document.getElementById('auth-password').focus()" />
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px">Senha</label>
+      <input type="password" id="auth-password" placeholder="••••••••" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:13px 14px;font-size:15px;outline:none" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')handleAuthSubmit()" />
+    </div>
+    <button class="btn-primary" id="auth-btn" onclick="handleAuthSubmit()" style="width:100%;padding:15px;font-size:15px">Entrar</button>
+    <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--muted)">
+      Não tem conta? <span style="color:var(--accent);cursor:pointer;font-weight:600" onclick="toggleAuthMode()">Criar conta</span>
+    </div>
+    <p class="auth-footer">Seus dados ficam salvos no seu dispositivo. O login garante que só você acessa o app.</p>
+  </div>
+</div>
+
+<!-- ════════════════ LANDING ════════════════ -->
+<div class="landing" id="landing">
+  <div class="landing-logo">Ci<span>clo</span></div>
+  <div class="landing-hero">
+    <h1 class="landing-title">Treino que <em>respeita</em> o seu corpo.</h1>
+    <p class="landing-sub">O Ciclo adapta seu treino, alimentação e descanso à fase do seu ciclo menstrual, ao seu nível de energia e aos seus objetivos. Sem fórmula única. Sem treino genérico.</p>
+
+    <div class="landing-pillars">
+      <div class="pillar">
+        <div class="pillar-icon">🌙</div>
+        <div><div class="pillar-title">Adapta ao seu ciclo</div><div class="pillar-desc">Treino e nutrição que mudam de acordo com a fase hormonal</div></div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🎯</div>
+        <div><div class="pillar-title">Seus objetivos no centro</div><div class="pillar-desc">Cardápio e treino calibrados pra onde você quer chegar</div></div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon">🧡</div>
+        <div><div class="pillar-title">Dor e humor importam</div><div class="pillar-desc">O treino do dia se adapta se você não está bem</div></div>
+      </div>
+    </div>
+
+    <div class="landing-cta">
+      <button class="btn-primary" onclick="startOnboarding()">Criar meu perfil</button>
+    </div>
+
+    <div class="existing-profiles" id="existing-profiles"></div>
+  </div>
+</div>
+
+<!-- ════════════════ ONBOARDING ════════════════ -->
+<div class="onboarding-bg" id="onboarding-bg">
+  <div class="onboarding">
+    <div class="ob-progress" id="ob-progress"></div>
+
+    <div class="ob-step active" data-step="1">
+      <h2>Como podemos te chamar?</h2>
+      <p class="ob-hint">Esse é o nome que vai aparecer no seu perfil.</p>
+      <div class="field-group"><label>Seu nome</label><input type="text" id="ob-name" placeholder="Ex: Ana" /></div>
+      <div class="field-group"><label>Idade</label><input type="number" id="ob-age" placeholder="Ex: 30" min="14" max="80" /></div>
+      <div class="ob-actions">
+        <button class="ob-next" onclick="nextStep(1)">Continuar</button>
+      </div>
+    </div>
+
+    <div class="ob-step" data-step="2">
+      <h2>Suas medidas básicas</h2>
+      <p class="ob-hint">Pra calcular suas calorias e proteínas ideais.</p>
+      <div class="field-row">
+        <div class="field-group"><label>Altura (cm)</label><input type="number" id="ob-height" placeholder="Ex: 165" min="120" max="220" /></div>
+        <div class="field-group"><label>Peso atual (kg)</label><input type="number" id="ob-weight" step="0.1" placeholder="Ex: 65" /></div>
+      </div>
+      <div class="ob-actions">
+        <button class="ob-back" onclick="prevStep(2)">Voltar</button>
+        <button class="ob-next" onclick="nextStep(2)">Continuar</button>
+      </div>
+    </div>
+
+    <div class="ob-step" data-step="3">
+      <h2>Como você está hoje</h2>
+      <p class="ob-hint">Suas medidas atuais. Não precisa do número exato, só uma estimativa boa.</p>
+      <div class="field-row">
+        <div class="field-group"><label>Cintura (cm)</label><input type="number" id="ob-waist" step="0.5" placeholder="Ex: 72" /></div>
+        <div class="field-group"><label>Quadril (cm)</label><input type="number" id="ob-hip" step="0.5" placeholder="Ex: 98" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>Peito (cm)</label><input type="number" id="ob-chest" step="0.5" placeholder="Ex: 90" /></div>
+        <div class="field-group"><label>Braço (cm)</label><input type="number" id="ob-arm" step="0.5" placeholder="Ex: 30" /></div>
+      </div>
+      <div class="field-group"><label>Coxa (cm)</label><input type="number" id="ob-thigh" step="0.5" placeholder="Ex: 58" /></div>
+      <div class="ob-actions">
+        <button class="ob-back" onclick="prevStep(3)">Voltar</button>
+        <button class="ob-next" onclick="nextStep(3)">Continuar</button>
+      </div>
+    </div>
+
+    <div class="ob-step" data-step="4">
+      <h2>Onde você quer chegar</h2>
+      <p class="ob-hint">Os números-objetivo. Use + e − pra ajustar. Pode deixar igual ao atual.</p>
+      <div class="field-group"><label>Peso desejado (kg)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-weight-goal',-1)">−</button><input type="number" id="ob-weight-goal" step="0.1" placeholder="62" /><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-weight-goal',1)">+</button></div></div>
+      <div class="field-row">
+        <div class="field-group"><label>Cintura (cm)</label>
+          <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-waist-goal',-1)">−</button><input type="number" id="ob-waist-goal" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-waist-goal',1)">+</button></div></div>
+        <div class="field-group"><label>Quadril (cm)</label>
+          <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-hip-goal',-1)">−</button><input type="number" id="ob-hip-goal" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-hip-goal',1)">+</button></div></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label>Peito (cm)</label>
+          <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-chest-goal',-1)">−</button><input type="number" id="ob-chest-goal" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-chest-goal',1)">+</button></div></div>
+        <div class="field-group"><label>Braço (cm)</label>
+          <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-arm-goal',-1)">−</button><input type="number" id="ob-arm-goal" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-arm-goal',1)">+</button></div></div>
+      </div>
+      <div class="field-group"><label>Coxa (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-thigh-goal',-1)">−</button><input type="number" id="ob-thigh-goal" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('ob-thigh-goal',1)">+</button></div></div>
+      <div class="ob-actions">
+        <button class="ob-back" onclick="prevStep(4)">Voltar</button>
+        <button class="ob-next" onclick="nextStep(4)">Continuar</button>
+      </div>
+    </div>
+
+    <div class="ob-step" data-step="5">
+      <h2>Seu foco principal</h2>
+      <p class="ob-hint">Qual é o resultado mais importante pra você nas próximas semanas?</p>
+      <div class="goal-grid" id="goal-options"></div>
+      <div class="ob-actions">
+        <button class="ob-back" onclick="prevStep(5)">Voltar</button>
+        <button class="ob-next" onclick="nextStep(5)">Continuar</button>
+      </div>
+    </div>
+
+    <div class="ob-step" data-step="6">
+      <h2>Alimentos que você não gosta</h2>
+      <p class="ob-hint">Toca nos que você não quer ver no seu cardápio. Você pode mudar depois.</p>
+      <div id="food-prefs-container"></div>
+      <div class="ob-actions">
+        <button class="ob-back" onclick="prevStep(6)">Voltar</button>
+        <button class="ob-next" onclick="nextStep(6)">Continuar</button>
+      </div>
+    </div>
+
+    <div class="ob-step" data-step="7">
+      <h2>Seu ciclo menstrual</h2>
+      <p class="ob-hint">Quando começou sua última menstruação? Isso permite o app adaptar tudo às suas fases.</p>
+      <div class="field-group"><label>Primeiro dia da última menstruação</label><input type="date" id="ob-cycle-start" /></div>
+      <div class="field-group"><label>Duração média do ciclo (dias)</label><input type="number" id="ob-cycle-length" value="28" min="21" max="35" /></div>
+      <div class="ob-actions">
+        <button class="ob-back" onclick="prevStep(7)">Voltar</button>
+        <button class="ob-skip" onclick="finishOnboarding(true)">Pular</button>
+        <button class="ob-finish" onclick="finishOnboarding(false)">Finalizar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ APP ════════════════ -->
+<div class="app" id="app">
+
+<header>
+  <div class="logo">Ci<span>clo</span></div>
+  <div class="header-right">
+    <div class="header-meta" id="header-meta"></div>
+    <div class="phase-badge" id="header-phase-badge"></div>
+    <button class="header-menu-btn" onclick="toggleHeaderMenu(event)" id="header-menu-btn"></button>
+  </div>
+</header>
+<div class="header-menu" id="header-menu">
+  <div class="header-menu-item" onclick="openTab('perfil', null)">⚙️ Meu perfil</div>
+  <div class="header-menu-item" onclick="switchProfile()">🔄 Trocar de perfil</div>
+  <div class="header-menu-item danger" onclick="logout()">🚪 Sair</div>
+</div>
+
+<nav>
+  <button class="active" onclick="openTab('dashboard',this)">Início</button>
+  <button onclick="openTab('treino',this)">Treino</button>
+  <button onclick="openTab('ciclo',this)">Ciclo</button>
+  <button onclick="openTab('nutricao',this)">Nutrição</button>
+  <button onclick="openTab('sono-pele',this)">Sono & Pele</button>
+  <button onclick="openTab('progresso',this)">Progresso</button>
+  <button onclick="openTab('perfil',this)">Perfil</button>
+</nav>
+
+<main>
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="tab active">
+  <div id="phase-banner-dash"></div>
+  <div id="pain-adapt-dash"></div>
+
+  <div class="stat-row" id="dash-stats"></div>
+
+  <div class="card">
+    <div class="card-title">Como você está hoje?</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:14px">
+      <div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Nível de dor ou desconforto físico</div>
+        <div class="pain-scale" id="pain-scale-dash"></div>
+        <div class="pain-labels"><span>Sem dor</span><span>Muito intensa</span></div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Humor</div>
+        <div class="mood-grid" id="mood-grid-dash"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Semana atual</div>
+    <div class="week" id="week-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Treino de hoje <span id="today-tag" class="tag tag-purple"></span></div>
+    <ul class="ex-list" id="today-exercises"></ul>
+    <p style="font-size:11px;color:var(--muted);margin-top:12px" id="today-workout-note"></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Check-list do dia</div>
+    <div id="daily-checks"></div>
+  </div>
+</div>
+
+<!-- TREINOS -->
+<div id="tab-treino" class="tab">
+  <div class="card">
+    <div class="card-title">Treino do dia</div>
+    <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px">
+      Gerado especialmente pra você hoje. Considera sua fase do ciclo, objetivo, dor e o que você treinou nos últimos dias.
+    </p>
+    <div id="retomada-status"></div>
+    <button class="btn btn-outline" onclick="regenerateWorkout()" style="margin-bottom:14px">↻ Gerar outro treino</button>
+  </div>
+  <div id="phase-mod-treino"></div>
+  <div id="workout-detail"></div>
+  <div id="workout-history"></div>
+</div>
+
+<!-- CICLO -->
+<div id="tab-ciclo" class="tab">
+  <div class="card">
+    <div class="card-title">Rastrear ciclo</div>
+    <div class="field-row" style="margin-bottom:10px">
+      <div class="input-group"><label>Início do ciclo</label><input type="date" id="cycle-start-input" /></div>
+      <div class="input-group"><label>Duração (dias)</label><input type="number" id="cycle-length-input" value="28" min="21" max="35" /></div>
+    </div>
+    <button class="btn btn-sm" onclick="saveCycle()">Salvar</button>
+  </div>
+
+  <div id="phase-banner-ciclo"></div>
+
+  <div class="card">
+    <div class="card-title">As 4 fases do seu ciclo</div>
+    <div class="phases-grid" id="phases-grid"></div>
+  </div>
+
+  <div class="card">
+    <div id="phase-detail-ciclo"></div>
+  </div>
+</div>
+
+<!-- NUTRIÇÃO -->
+<div id="tab-nutricao" class="tab">
+  <div class="card">
+    <div class="card-title">Seu perfil nutricional</div>
+    <div class="grid3" id="nutrition-stats"></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px" id="nutrition-note"></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cardápio de hoje</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      Três opções de cardápio. Escolha a que te apetece mais hoje. Já filtrado pelos seus gostos.
+    </p>
+    <div class="menu-options" id="menu-options"></div>
+    <button class="btn btn-outline" onclick="regenerateMenus()" style="margin-top:6px">↻ Gerar novas opções</button>
+  </div>
+
+  <div class="card" id="selected-menu-detail" style="display:none;"></div>
+
+  <div class="card">
+    <div class="card-title">Alimentos-chave pros seus objetivos</div>
+    <div class="grid2" id="superfood-grid"></div>
+  </div>
+</div>
+
+<!-- SONO & PELE -->
+<div id="tab-sono-pele" class="tab">
+  <div class="grid2">
+    <div class="card"><div class="card-title">Sono 💤</div><div id="sleep-tips"></div></div>
+    <div class="card"><div class="card-title">Pele ✨</div><div id="skin-tips"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Nutrientes essenciais</div>
+    <div id="nutrients-grid" class="grid2"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Rotina noturna</div>
+    <div id="night-routine"></div>
+  </div>
+</div>
+
+<!-- PROGRESSO -->
+<div id="tab-progresso" class="tab">
+  <div class="card">
+    <div class="card-title">Onde você está agora</div>
+    <div class="compare-card" id="compare-now"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Onde você quer chegar</div>
+    <div class="compare-card" id="compare-goal"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Editar minhas metas</div>
+    <div class="field-row">
+      <div class="input-group"><label>Peso meta (kg)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-weight',-1)">−</button><input type="number" id="goal-weight" step="0.1" /><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-weight',1)">+</button></div></div>
+      <div class="input-group"><label>Cintura meta (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-waist',-1)">−</button><input type="number" id="goal-waist" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-waist',1)">+</button></div></div>
+    </div>
+    <div class="field-row">
+      <div class="input-group"><label>Quadril meta (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-hip',-1)">−</button><input type="number" id="goal-hip" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-hip',1)">+</button></div></div>
+      <div class="input-group"><label>Peito meta (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-chest',-1)">−</button><input type="number" id="goal-chest" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-chest',1)">+</button></div></div>
+    </div>
+    <div class="field-row">
+      <div class="input-group"><label>Braço meta (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-arm',-1)">−</button><input type="number" id="goal-arm" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-arm',1)">+</button></div></div>
+      <div class="input-group"><label>Coxa meta (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-thigh',-1)">−</button><input type="number" id="goal-thigh" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('goal-thigh',1)">+</button></div></div>
+    </div>
+    <button class="btn" onclick="saveGoals()">Salvar metas</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Distância da meta</div>
+    <div id="goal-progress"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Atualizar minhas medidas</div>
+    <div class="field-row">
+      <div class="input-group"><label>Peso (kg)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-weight',-1)">−</button><input type="number" id="inp-weight" step="0.1" /><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-weight',1)">+</button></div></div>
+      <div class="input-group"><label>Cintura (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-waist',-1)">−</button><input type="number" id="inp-waist" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-waist',1)">+</button></div></div>
+    </div>
+    <div class="field-row">
+      <div class="input-group"><label>Quadril (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-hip',-1)">−</button><input type="number" id="inp-hip" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-hip',1)">+</button></div></div>
+      <div class="input-group"><label>Peito (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-chest',-1)">−</button><input type="number" id="inp-chest" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-chest',1)">+</button></div></div>
+    </div>
+    <div class="field-row">
+      <div class="input-group"><label>Braço (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-arm',-1)">−</button><input type="number" id="inp-arm" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-arm',1)">+</button></div></div>
+      <div class="input-group"><label>Coxa (cm)</label>
+        <div class="stepper"><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-thigh',-1)">−</button><input type="number" id="inp-thigh" step="0.5" /><button class="stepper-btn" type="button" onclick="stepperAdjust('inp-thigh',1)">+</button></div></div>
+    </div>
+    <button class="btn" onclick="saveLog()">Salvar registro</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Histórico</div>
+    <canvas id="weight-chart" height="160"></canvas>
+    <div id="log-list" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- PERFIL -->
+<div id="tab-perfil" class="tab">
+  <div class="card">
+    <div class="card-title">Meu perfil</div>
+    <div id="profile-info"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Meus dados</div>
+    <div class="field-row">
+      <div class="input-group"><label>Nome</label><input type="text" id="prof-name" /></div>
+      <div class="input-group"><label>Idade</label><input type="number" id="prof-age" /></div>
+    </div>
+    <div class="field-row">
+      <div class="input-group"><label>Altura (cm)</label><input type="number" id="prof-height" /></div>
+      <div class="input-group"><label>Objetivo</label>
+        <select id="prof-goal-type">
+          <option value="recomposicao">Recomposição</option>
+          <option value="hipertrofia">Hipertrofia</option>
+          <option value="emagrecimento">Emagrecimento</option>
+          <option value="tonificacao">Tonificação</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-sm" onclick="saveProfileData()">Salvar alterações</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Alimentos que não gosto</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Toca pra adicionar ou remover. O cardápio será filtrado.</p>
+    <div id="profile-foods-container"></div>
+  </div>
+</div>
+
+</main>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// STORAGE (multi-profile)
+// ══════════════════════════════════════════════
+const ST_PROFILES = 'ciclo_profiles';
+const ST_CURRENT = 'ciclo_current_profile';
+
+function getProfiles() {
+  return JSON.parse(localStorage.getItem(ST_PROFILES) || '[]');
+}
+function saveProfiles(arr) {
+  localStorage.setItem(ST_PROFILES, JSON.stringify(arr));
+}
+function getCurrentProfileId() {
+  return localStorage.getItem(ST_CURRENT);
+}
+function setCurrentProfileId(id) {
+  if (id === null) localStorage.removeItem(ST_CURRENT);
+  else localStorage.setItem(ST_CURRENT, id);
+}
+function getCurrentProfile() {
+  const id = getCurrentProfileId();
+  if (!id) return null;
+  return getProfiles().find(p => p.id === id);
+}
+function updateCurrentProfile(updates) {
+  const id = getCurrentProfileId();
+  const profiles = getProfiles();
+  const idx = profiles.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  profiles[idx] = { ...profiles[idx], ...updates };
+  saveProfiles(profiles);
+}
+
+// Migrate old data (versão antiga, sem perfis) if needed
+function migrateLegacyData() {
+  if (getProfiles().length > 0) return;
+  const legacyCycle = localStorage.getItem('cycle_data');
+  const legacyLog = localStorage.getItem('progress_log');
+  if (legacyCycle || legacyLog) {
+    const profile = {
+      id: 'p_legacy_' + Date.now(),
+      name: 'Meu perfil',
+      age: null,
+      height: null,
+      weight: null,
+      weight_goal: null,
+      measurements: {},
+      measurements_goal: {},
+      goal_type: 'recomposicao',
+      food_dislikes: [],
+      cycle_data: legacyCycle ? JSON.parse(legacyCycle) : null,
+      logs: legacyLog ? JSON.parse(legacyLog) : [],
+      daily_checks: JSON.parse(localStorage.getItem('daily_checks') || '{}'),
+      pain_log: {},
+      mood_log: {},
+      menu_selections: {},
+      created_at: new Date().toISOString()
+    };
+    saveProfiles([profile]);
+    setCurrentProfileId(profile.id);
+  }
+}
+
+// ══════════════════════════════════════════════
+// LIBRARIES
+// ══════════════════════════════════════════════
+
+const FOOD_CATALOG = {
+  proteinas: ['Frango','Peixe branco (tilápia, pescada)','Salmão','Atum','Sardinha','Carne vermelha magra','Ovos','Iogurte grego','Queijo cottage','Whey protein','Peito de peru','Tofu','Carne suína magra','Bacalhau','Camarão','Lula','Carne moída','Frango desfiado','Ricota','Proteína de soja (PTS)','Queijo minas','Leite desnatado','Kefir','Ovo de codorna'],
+  carbos: ['Arroz integral','Arroz branco','Batata-doce','Batata inglesa','Macarrão integral','Pão integral','Aveia','Quinoa','Tapioca','Mandioca','Cuscuz','Milho','Biscoito de arroz','Inhame','Cará','Granola','Pão de forma integral','Macarrão de arroz','Polenta','Batata-baroa'],
+  vegetais: ['Brócolis','Couve','Espinafre','Alface','Rúcula','Beterraba','Cenoura','Abobrinha','Tomate','Pepino','Couve-flor','Berinjela','Chuchu','Vagem','Pimentão','Cebola','Alho','Aspargos','Acelga','Repolho','Nabo','Rabanete','Quiabo','Jiló'],
+  frutas: ['Banana','Maçã','Mamão','Blueberry','Morango','Abacate','Laranja','Kiwi','Manga','Melancia','Uva','Pêra','Abacaxi','Melão','Goiaba','Caju','Açaí','Framboesa','Amora','Limão','Tangerina','Maracujá','Romã','Pitanga'],
+  leguminosas: ['Feijão preto','Feijão carioca','Lentilha','Grão-de-bico','Ervilha','Soja','Feijão fradinho','Feijão branco','Feijão vermelho','Amendoim'],
+  gorduras: ['Castanha-do-pará','Castanha de caju','Amêndoa','Nozes','Pasta de amendoim','Azeite de oliva','Sementes de chia','Sementes de abóbora','Coco','Manteiga ghee','Óleo de coco','Linhaça','Gergelim','Pistache','Tahine','Macadâmia','Sementes de girassol']
+};
+
+const GOAL_TYPES = [
+  { id: 'hipertrofia', title: 'Hipertrofia', desc: 'Ganhar massa muscular. Mais carga, mais proteína, leve superávit calórico.' },
+  { id: 'emagrecimento', title: 'Emagrecimento', desc: 'Reduzir gordura corporal. Mais cardio, déficit calórico moderado.' },
+  { id: 'recomposicao', title: 'Recomposição', desc: 'Trocar gordura por músculo mantendo o peso. Equilíbrio entre força e cardio.' },
+  { id: 'tonificacao', title: 'Tonificação', desc: 'Definir o corpo. Treino de força moderada + manutenção calórica.' }
+];
+
+// Exercise library (grouped, varied)
+const EX_LIBRARY = {
+  peito: [
+    { icon: '🤸', name: 'Flexão de braço', muscle: 'Peitoral / Tríceps', sets: { leve: '3x 6–8', medio: '4x 8–12', forte: '4x 12–15' }, tip: 'Joelhos no chão se precisar' },
+    { icon: '🤸', name: 'Flexão diamante', muscle: 'Tríceps / Peitoral', sets: { leve: '3x 6', medio: '3x 8–10', forte: '4x 10–12' }, tip: 'Mãos formam um losango embaixo do peito' },
+    { icon: '🤸', name: 'Flexão declinada (pés no banco)', muscle: 'Peitoral superior', sets: { leve: '3x 6', medio: '3x 8', forte: '4x 10' }, tip: 'Pés elevados em sofá ou cama' },
+    { icon: '🤸', name: 'Flexão archer', muscle: 'Peitoral unilateral', sets: { leve: '2x 4 cada', medio: '3x 6 cada', forte: '3x 8 cada' }, tip: 'Um braço estende lateral, outro flexiona' },
+    { icon: '🧱', name: 'Flexão na parede', muscle: 'Peitoral / Tríceps', sets: { leve: '3x 10', medio: '3x 15', forte: '4x 15' }, tip: 'Quanto mais longe da parede, mais difícil' },
+    { icon: '🛋️', name: 'Flexão inclinada (mãos no sofá)', muscle: 'Peitoral / Tríceps', sets: { leve: '3x 8', medio: '3x 10–12', forte: '4x 12' }, tip: 'Passo entre a parede e a flexão no chão' }
+  ],
+  costas: [
+    { icon: '🔙', name: 'Remada invertida (mesa ou barra baixa)', muscle: 'Costas / Bíceps', sets: { leve: '3x 6–8', medio: '4x 8–10', forte: '4x 10–12' }, tip: 'Deitada sob a mesa, puxe o peito até a borda' },
+    { icon: '💪', name: 'Chin-up negativo', muscle: 'Bíceps / Costas', sets: { leve: '3x 4', medio: '3x 5–8', forte: '4x 6–8' }, tip: 'Suba com ajuda, desça em 5s' },
+    { icon: '🦸', name: 'Superman', muscle: 'Lombar / Glúteos', sets: { leve: '3x 10', medio: '3x 15', forte: '4x 20' }, tip: 'Eleve braços e pernas ao mesmo tempo' },
+    { icon: '🦅', name: 'Bird dog', muscle: 'Lombar / Core', sets: { leve: '3x 8 cada', medio: '3x 10 cada', forte: '3x 12 cada' }, tip: 'Braço e perna oposta estendidos' }
+  ],
+  ombros: [
+    { icon: '📐', name: 'Pike push-up', muscle: 'Ombros / Tríceps', sets: { leve: '3x 6', medio: '3x 8–12', forte: '4x 10–12' }, tip: 'Quadril elevado, queixo desce ao chão' },
+    { icon: '🙆', name: 'Elevação lateral com garrafa de água', muscle: 'Deltoides lateral', sets: { leve: '3x 12', medio: '3x 15', forte: '4x 15' }, tip: 'Garrafa de 1L em cada mão' },
+    { icon: '🙆', name: 'Elevação frontal com mochila', muscle: 'Deltoides frontal', sets: { leve: '3x 10', medio: '3x 12', forte: '4x 12' }, tip: 'Mochila com livros funciona' }
+  ],
+  tricep: [
+    { icon: '🪑', name: 'Dips no banco', muscle: 'Tríceps', sets: { leve: '3x 6', medio: '3x 10–12', forte: '4x 12–15' }, tip: 'Cotovelos apontam pra trás' },
+    { icon: '🤸', name: 'Flexão fechada (mãos juntas)', muscle: 'Tríceps', sets: { leve: '3x 6', medio: '3x 8–10', forte: '4x 10' }, tip: 'Mãos próximas no chão' },
+    { icon: '🍶', name: 'Tríceps francês com garrafa', muscle: 'Tríceps', sets: { leve: '3x 10', medio: '3x 12', forte: '4x 15' }, tip: 'Garrafa de água ou mochila leve' }
+  ],
+  bicep: [
+    { icon: '💪', name: 'Rosca com mochila', muscle: 'Bíceps', sets: { leve: '3x 10', medio: '3x 12', forte: '4x 12–15' }, tip: 'Mochila pesada por baixo, sobe controlado' },
+    { icon: '💪', name: 'Rosca isométrica na porta', muscle: 'Bíceps', sets: { leve: '3x 20s', medio: '3x 30s', forte: '4x 40s' }, tip: 'Puxa a porta na metade do movimento' }
+  ],
+  quadriceps: [
+    { icon: '🦵', name: 'Agachamento livre', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 12', medio: '4x 15–20', forte: '4x 20–25' }, tip: 'Desça abaixo de 90°' },
+    { icon: '🎿', name: 'Agachamento búlgaro', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 8 cada', medio: '3x 10 cada', forte: '4x 12 cada' }, tip: 'Pé traseiro no banco' },
+    { icon: '🔁', name: 'Avanço alternado', muscle: 'Quadríceps / Equilíbrio', sets: { leve: '3x 10 cada', medio: '3x 12 cada', forte: '4x 15 cada' }, tip: 'Joelho de trás quase toca o chão' },
+    { icon: '⛷️', name: 'Cadeira na parede (wall sit)', muscle: 'Quadríceps', sets: { leve: '3x 30s', medio: '3x 45s', forte: '4x 60s' }, tip: 'Costas na parede, 90° nos joelhos' },
+    { icon: '🦵', name: 'Agachamento sumo', muscle: 'Adutores / Glúteos', sets: { leve: '3x 12', medio: '3x 15', forte: '4x 20' }, tip: 'Pés bem abertos, ponta pra fora' },
+    { icon: '🪑', name: 'Senta e levanta da cadeira', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 10', medio: '3x 15', forte: '4x 15' }, tip: 'A cadeira limita a descida e protege o joelho' }
+  ],
+  gluteo: [
+    { icon: '🍑', name: 'Ponte de glúteo', muscle: 'Glúteos / Posterior', sets: { leve: '3x 15', medio: '4x 20', forte: '4x 25' }, tip: 'Aperte os glúteos no topo' },
+    { icon: '🍑', name: 'Ponte unilateral', muscle: 'Glúteo isolado', sets: { leve: '3x 8 cada', medio: '3x 10 cada', forte: '4x 12 cada' }, tip: 'Uma perna estendida' },
+    { icon: '🔀', name: 'Abdução de quadril deitada', muscle: 'Glúteo médio', sets: { leve: '3x 15', medio: '3x 20', forte: '4x 25' }, tip: 'Deitada de lado, eleve a perna' },
+    { icon: '🦒', name: 'Kickback (chute pra trás)', muscle: 'Glúteo máximo', sets: { leve: '3x 12 cada', medio: '3x 15 cada', forte: '4x 20 cada' }, tip: 'Quatro apoios, chuta atrás' },
+    { icon: '🦘', name: 'Hip thrust no banco', muscle: 'Glúteos', sets: { leve: '3x 12', medio: '4x 15', forte: '4x 20' }, tip: 'Costas no sofá, sobe e desce' }
+  ],
+  posterior: [
+    { icon: '🦵', name: 'Stiff em pé com mochila', muscle: 'Posterior de coxa', sets: { leve: '3x 10', medio: '3x 12', forte: '4x 15' }, tip: 'Joelhos quase travados, desce o tronco' },
+    { icon: '🦵', name: 'Curl de perna deitada (toalha)', muscle: 'Posterior', sets: { leve: '3x 10', medio: '3x 12', forte: '3x 15' }, tip: 'Desliza a toalha no chão' }
+  ],
+  panturrilha: [
+    { icon: '🏔️', name: 'Elevação de panturrilha no degrau', muscle: 'Panturrilha', sets: { leve: '3x 15', medio: '4x 20', forte: '4x 25' }, tip: 'Desça abaixo do degrau' }
+  ],
+  core: [
+    { icon: '🧘', name: 'Prancha', muscle: 'Core', sets: { leve: '3x 30s', medio: '3x 45s', forte: '4x 60s' }, tip: 'Quadril alinhado' },
+    { icon: '🌀', name: 'Bicicleta abdominal', muscle: 'Oblíquos / Reto', sets: { leve: '3x 15', medio: '3x 20', forte: '4x 25' }, tip: 'Cotovelo toca joelho oposto' },
+    { icon: '🌀', name: 'Russian twist', muscle: 'Oblíquos', sets: { leve: '3x 15', medio: '3x 20', forte: '4x 25' }, tip: 'Pés no ar pra mais intensidade' },
+    { icon: '🌀', name: 'Dead bug', muscle: 'Core profundo', sets: { leve: '3x 8 cada', medio: '3x 10 cada', forte: '3x 12 cada' }, tip: 'Estende braço e perna oposta' },
+    { icon: '🌀', name: 'Hollow hold', muscle: 'Core anterior', sets: { leve: '3x 15s', medio: '3x 25s', forte: '4x 40s' }, tip: 'Forma de banana invertida' },
+    { icon: '🧘', name: 'Prancha lateral', muscle: 'Oblíquos', sets: { leve: '3x 20s cada', medio: '3x 30s cada', forte: '3x 45s cada' }, tip: 'Quadril não cai' }
+  ],
+  cardio: [
+    { icon: '💥', name: 'Burpee', muscle: 'Full body / Cardio', sets: { leve: '3x 6', medio: '3x 8–10', forte: '4x 10–12' }, tip: 'Versão leve sem salto' },
+    { icon: '🦵', name: 'Agachamento com salto', muscle: 'Potência', sets: { leve: '3x 8', medio: '3x 10', forte: '4x 12' }, tip: 'Aterrisse suave' },
+    { icon: '🏃', name: 'Mountain climbers', muscle: 'Core / Cardio', sets: { leve: '3x 20s', medio: '3x 30s', forte: '4x 45s' }, tip: 'Joelhos rápidos alternados' },
+    { icon: '🏃', name: 'High knees', muscle: 'Cardio', sets: { leve: '3x 30s', medio: '3x 45s', forte: '4x 60s' }, tip: 'Joelhos altos no lugar' },
+    { icon: '🪢', name: 'Pular corda (real ou simulada)', muscle: 'Cardio', sets: { leve: '5x 30s', medio: '5x 60s', forte: '6x 60s' }, tip: 'Alterne pés ou um pé só' },
+    { icon: '🚶', name: 'Caminhada rápida', muscle: 'Cardio leve', sets: { leve: '20min', medio: '30min', forte: '40min' }, tip: 'Ritmo que dificulta conversar' },
+    { icon: '🚶', name: 'Marcha no lugar', muscle: 'Cardio leve', sets: { leve: '3x 45s', medio: '3x 60s', forte: '4x 90s' }, tip: 'Sem impacto, ótimo pra quem está voltando' },
+    { icon: '↔️', name: 'Passo lateral (step touch)', muscle: 'Cardio leve', sets: { leve: '3x 45s', medio: '3x 60s', forte: '4x 90s' }, tip: 'Um pé encontra o outro, sem pular' }
+  ],
+  mobilidade: [
+    { icon: '🧘', name: 'Saudação ao sol', muscle: 'Corpo todo', sets: { leve: '5 rounds', medio: '8 rounds', forte: '10 rounds' }, tip: 'Lento, foco na respiração' },
+    { icon: '🌿', name: 'Postura da criança', muscle: 'Lombar / Quadril', sets: { leve: '2min', medio: '90s', forte: '60s' }, tip: 'Bacia afunda no calcanhar' },
+    { icon: '🧘', name: 'Gato-vaca', muscle: 'Coluna', sets: { leve: '3x 8', medio: '3x 10', forte: '3x 12' }, tip: 'Respira em cada movimento' },
+    { icon: '🌀', name: 'Pomba (pigeon pose)', muscle: 'Quadril', sets: { leve: '90s cada', medio: '60s cada', forte: '45s cada' }, tip: 'Abre quadril, alivia cólicas' },
+    { icon: '🌀', name: 'Torção deitada', muscle: 'Coluna / Oblíquos', sets: { leve: '90s cada', medio: '60s cada', forte: '45s cada' }, tip: 'Alivia tensão lombar' },
+    { icon: '😌', name: 'Pernas na parede', muscle: 'Circulação', sets: { leve: '5min', medio: '5min', forte: '5min' }, tip: 'Reduz inchaço nas pernas' },
+    { icon: '🧘', name: 'Cachorro olhando pra baixo', muscle: 'Corpo todo', sets: { leve: '90s', medio: '60s', forte: '45s' }, tip: 'Alonga toda a parte de trás' }
+  ]
+};
+
+// Cycle phases
+const PHASES = [
+  { id: 'menstrual', name: 'Menstrual', days: 'Dias 1–5', icon: '🩸', color: '#f87171', bg: '#3b0f0f', border: '#f8717155', energy: 'Baixa',
+    desc: 'Estrogênio e progesterona no mínimo. Corpo pedindo descanso.',
+    workout: 'Sessões suaves: mobilidade, yoga, caminhada. Evite HIIT.',
+    nutrition: 'Ferro (feijão, espinafre, carne vermelha), vitamina C, magnésio e gengibre anti-inflamatório.',
+    skin: 'Pele pode ficar mais oleosa. Aumente hidratação.',
+    sleep: 'Sono pode estar mais difícil. Magnésio e camomila ajudam.',
+    intensity: 'leve',
+    checks: ['Priorizar descanso', 'Alimentos ricos em ferro', 'Chá de camomila', 'Evitar exercícios intensos', 'Bolsa quente pra cólicas', 'Dormir antes das 23h'] },
+  { id: 'folicular', name: 'Folicular', days: 'Dias 6–13', icon: '🌱', color: '#34d399', bg: '#0f3727', border: '#34d39955', energy: 'Crescendo',
+    desc: 'Estrogênio subindo. Disposição aumentando.',
+    workout: 'Treinos normais ou progressivos. Aumente carga, séries ou variações.',
+    nutrition: 'Proteína alta. Carboidratos complexos pré-treino.',
+    skin: 'Pele melhora. Mantenha vitamina C e ômega-3.',
+    sleep: 'Sono melhora. Fixe horários regulares.',
+    intensity: 'medio',
+    checks: ['Treino completo com progressão', 'Proteína em cada refeição', '2,5L de água', 'Aumentar carga ou repetições', 'Sol 10–15min', 'Dormir 7–8h'] },
+  { id: 'ovulatoria', name: 'Ovulatória', days: 'Dias 14–16', icon: '⚡', color: '#fbbf24', bg: '#3b2f0a', border: '#fbbf2455', energy: 'Pico',
+    desc: 'Pico de estrogênio + testosterona. Força no máximo.',
+    workout: 'Alta intensidade. Novos desafios, mais séries, menos descanso.',
+    nutrition: 'Aumente proteína e carboidratos. Auge da síntese proteica.',
+    skin: 'Pele no melhor estado. Antioxidantes (vitamina C, E).',
+    sleep: 'Sono mais superficial. Ambiente fresco e escuro.',
+    intensity: 'forte',
+    checks: ['Treino de alta intensidade', 'Progressão nos exercícios', 'Proteína >100g', 'Hidratação reforçada', 'Exercício ao ar livre', 'Descanso de qualidade'] },
+  { id: 'lutea', name: 'Lútea', days: 'Dias 17–28', icon: '🌙', color: '#c084fc', bg: '#2a1a4e', border: '#c084fc55', energy: 'Declínio',
+    desc: 'Progesterona dominante, depois queda. TPM pode aparecer.',
+    workout: 'Início: normal sem máximo esforço. Final: reduza intensidade.',
+    nutrition: 'Magnésio e B6 pra TPM. Reduza sódio e cafeína.',
+    skin: 'Pele mais oleosa. Aumente ômega-3, reduza lácteos.',
+    sleep: 'Sono mais interrompido. Camomila, magnésio, sem cafeína após 13h.',
+    intensity: 'medio',
+    checks: ['Treino moderado', 'Alimentos com magnésio', 'Sem cafeína após 13h', 'Dormir antes das 23h', 'Reduzir sódio', 'Respiração se TPM'] }
+];
+
+// Meal library with ingredients tags for filtering
+const MEAL_LIBRARY = {
+  cafe: [
+    { name: '2 ovos mexidos + 1 fatia pão integral + ½ abacate + 1 fruta', ingredients: ['Ovos','Pão integral','Abacate','Banana'], tip: 'Proteína + gordura boa logo cedo' },
+    { name: 'Tapioca recheada com queijo + ovo mexido + suco de laranja', ingredients: ['Tapioca','Ovos','Laranja'], tip: 'Carbo de digestão rápida + proteína' },
+    { name: 'Omelete de 3 ovos com espinafre + 1 fatia pão + café preto', ingredients: ['Ovos','Espinafre','Pão integral'], tip: 'Ferro e proteína completa' },
+    { name: 'Iogurte grego com aveia, banana e mel', ingredients: ['Iogurte grego','Aveia','Banana'], tip: 'Proteína + fibra' },
+    { name: 'Crepioca de queijo + 1 fruta', ingredients: ['Ovos','Tapioca','Maçã'], tip: 'Versão prática da tapioca' },
+    { name: 'Vitamina de whey, banana, aveia e pasta de amendoim', ingredients: ['Whey protein','Banana','Aveia','Pasta de amendoim'], tip: 'Café da manhã líquido pós-treino' }
+  ],
+  lancheManha: [
+    { name: 'Iogurte grego com castanhas + 1 fruta', ingredients: ['Iogurte grego','Castanha de caju','Maçã'], tip: 'Zinco e probióticos' },
+    { name: '1 maçã + 1 colher de pasta de amendoim', ingredients: ['Maçã','Pasta de amendoim'], tip: 'Fibra + gordura boa' },
+    { name: '1 banana + 1 castanha-do-pará + 2 amêndoas', ingredients: ['Banana','Castanha-do-pará','Amêndoa'], tip: 'Selênio diário' },
+    { name: 'Mix de frutas vermelhas + iogurte natural', ingredients: ['Blueberry','Morango','Iogurte grego'], tip: 'Antioxidantes potentes' },
+    { name: 'Ovo cozido + 1 fruta', ingredients: ['Ovos','Mamão'], tip: 'Proteína prática' }
+  ],
+  almoco: [
+    { name: '150g de frango grelhado + arroz integral + feijão + salada', ingredients: ['Frango','Arroz integral','Feijão preto','Alface','Tomate'], tip: 'Refeição clássica balanceada' },
+    { name: '150g de peixe branco + batata-doce + brócolis no vapor', ingredients: ['Peixe branco (tilápia, pescada)','Batata-doce','Brócolis'], tip: 'Proteína leve + carbo de baixo índice' },
+    { name: 'Strogonoff de frango light + arroz + salada de alface e tomate', ingredients: ['Frango','Arroz integral','Alface','Tomate'], tip: 'Conforto sem peso' },
+    { name: 'Filé de carne magra + purê de mandioca + couve refogada', ingredients: ['Carne vermelha magra','Mandioca','Couve'], tip: 'Ferro biodisponível' },
+    { name: 'Frango xadrez com legumes + arroz integral', ingredients: ['Frango','Arroz integral','Brócolis','Cenoura'], tip: 'Refeição completa' },
+    { name: 'Bowl de quinoa, frango desfiado, beterraba e folhas', ingredients: ['Quinoa','Frango','Beterraba','Rúcula'], tip: 'Versão saudável e moderna' },
+    { name: 'Carne moída + arroz + feijão + salada com pepino', ingredients: ['Carne vermelha magra','Arroz integral','Feijão carioca','Pepino','Tomate'], tip: 'Combinação ferro + vitamina C' },
+    { name: 'Lasanha de berinjela com frango + salada', ingredients: ['Frango','Berinjela','Tomate','Alface'], tip: 'Low carb saboroso' }
+  ],
+  preTreino: [
+    { name: '1 banana + 1 colher de pasta de amendoim', ingredients: ['Banana','Pasta de amendoim'], tip: 'Energia rápida sem peso' },
+    { name: 'Batata-doce + whey shake', ingredients: ['Batata-doce','Whey protein'], tip: 'Carbo + proteína 45min antes' },
+    { name: 'Tapioca com mel + café preto', ingredients: ['Tapioca'], tip: 'Carbo de absorção rápida' },
+    { name: '1 fatia de pão integral com geleia + café', ingredients: ['Pão integral'], tip: 'Simples e eficaz' },
+    { name: 'Iogurte com aveia e banana', ingredients: ['Iogurte grego','Aveia','Banana'], tip: 'Pra quem prefere algo cremoso' }
+  ],
+  jantar: [
+    { name: '150g de salmão grelhado + batata-doce + brócolis no vapor', ingredients: ['Salmão','Batata-doce','Brócolis'], tip: 'Ômega-3 pra recuperação muscular' },
+    { name: '150g de peito de peru + arroz + salada verde', ingredients: ['Peito de peru','Arroz integral','Alface','Rúcula'], tip: 'Proteína magra rápida' },
+    { name: 'Omelete de 3 ovos com cogumelos + salada', ingredients: ['Ovos','Alface','Tomate'], tip: 'Triptofano favorece melatonina' },
+    { name: 'Frango grelhado + batata inglesa + abobrinha', ingredients: ['Frango','Batata inglesa','Abobrinha'], tip: 'Refeição leve mas substancial' },
+    { name: 'Atum em conserva + arroz + salada de pepino', ingredients: ['Atum','Arroz integral','Pepino','Tomate'], tip: 'Prática e proteica' },
+    { name: 'Tofu grelhado + quinoa + legumes refogados', ingredients: ['Tofu','Quinoa','Abobrinha','Cenoura'], tip: 'Vegetariana completa' },
+    { name: 'Sardinha grelhada + batata-doce + salada', ingredients: ['Sardinha','Batata-doce','Alface'], tip: 'Vitamina D e cálcio' },
+    { name: 'Carne magra + macarrão integral + molho de tomate + queijo', ingredients: ['Carne vermelha magra','Macarrão integral','Tomate','Queijo cottage'], tip: 'Versão saudável da massa' }
+  ],
+  ceia: [
+    { name: 'Chá de camomila + 2 castanhas', ingredients: ['Castanha de caju'], tip: 'Relaxa pra dormir' },
+    { name: 'Iogurte grego com 1 colher de mel', ingredients: ['Iogurte grego'], tip: 'Proteína lenta noturna' },
+    { name: '1 fatia de queijo cottage + 1 castanha-do-pará', ingredients: ['Queijo cottage','Castanha-do-pará'], tip: 'Selênio + caseína' },
+    { name: 'Chá de maracujá + 1 maçã', ingredients: ['Maçã'], tip: 'Calmante natural' }
+  ]
+};
+
+// Daily checks
+const DAILY_CHECKS_DEFAULT = ['Beber 2,5L de água','Proteína em todas as refeições','Fazer o treino do dia','2 porções de vegetais','Dormir até 23h30','Sol 10–15 min','Sem açúcar refinado'];
+
+// Mood options
+const MOODS = [
+  { id: 'otimo', emoji: '😄', name: 'Ótimo' },
+  { id: 'bem', emoji: '🙂', name: 'Bem' },
+  { id: 'regular', emoji: '😐', name: 'Regular' },
+  { id: 'cansada', emoji: '😪', name: 'Cansada' },
+  { id: 'triste', emoji: '😔', name: 'Triste' }
+];
+
+// ══════════════════════════════════════════════
+// EXERCISE EXTRA DATA (descrição + erro)
+// ══════════════════════════════════════════════
+// desc: como executar (máx 2 linhas)
+// mistake: principal erro a evitar
+const EX_EXTRA = {
+  'Flexão de braço':                  { desc:'Mãos na largura dos ombros, cotovelos a 45°. Desça até quase tocar o chão e suba com força.',                       mistake:'Cotovelos muito abertos — sobrecarregam o ombro' },
+  'Flexão diamante':                  { desc:'Mãos formam um losango embaixo do peito. Desça devagar mantendo os cotovelos fechados.',                           mistake:'Deixar o quadril subir ou afundar durante o movimento' },
+  'Flexão declinada (pés no banco)':  { desc:'Pés elevados em superfície firme. O ângulo trabalha a parte superior do peitoral.',                                 mistake:'Não contrair o core — lombar fica arqueada demais' },
+  'Flexão archer':                    { desc:'Um braço flexiona enquanto o outro se estende lateral. Desça devagar para o lado que flexiona.',                     mistake:'Rodar o tronco — ombros devem ficar paralelos ao chão' },
+  'Remada invertida (mesa ou barra baixa)': { desc:'Corpo reto como prancha, puxe o peito até a barra. Escápulas se aproximam no topo.',                                 mistake:'Deixar o quadril afundar durante o movimento' },
+  'Chin-up negativo':                 { desc:'Suba com ajuda e desça em 5 segundos controlados. O excêntrico é o que mais gera força.',                            mistake:'Descer rápido demais — perde todo o benefício do movimento' },
+  'Superman':                         { desc:'Deitada de bruços, eleve braços e pernas ao mesmo tempo. Segure 2 s no topo.',                                       mistake:'Forçar o pescoço — olhar para o chão durante todo o movimento' },
+  'Bird dog':                         { desc:'Em quatro apoios, estenda braço e perna opostos. Quadril nivelado e core contraído.',                               mistake:'Rotar o quadril ao estender a perna' },
+  'Pike push-up':                     { desc:'Quadril elevado em V invertido, desça o queixo até o chão. Cotovelos a 45°.',                                       mistake:'Deixar o quadril cair — vira flexão normal e sai dos ombros' },
+  'Elevação lateral com garrafa de água': { desc:'Braços levemente flexionados, suba até a altura dos ombros. Controle na descida.',                                  mistake:'Balançar o corpo para ganhar impulso' },
+  'Elevação frontal com mochila':     { desc:'Suba o peso à frente até a altura dos ombros e desça devagar. Core firme.',                                         mistake:'Inclinar o tronco para trás e usar o embalo para subir' },
+  'Dips no banco':                    { desc:'Mãos no banco atrás, cotovelos apontam pra trás. Desça até 90° e empurre de volta.',                                 mistake:'Cotovelos abrirem para os lados — tira o foco do tríceps' },
+  'Flexão fechada (mãos juntas)':     { desc:'Mãos próximas no chão, cotovelos roçam o tronco na descida. Foco no tríceps.',                                      mistake:'Mãos muito juntas — sobrecarrega os pulsos' },
+  'Rosca com mochila':                { desc:'Cotovelo fixo ao corpo, suba contraindo o bíceps e desça devagar controlando.',                                    mistake:'Mover o cotovelo para frente e para trás' },
+  'Rosca isométrica na porta':        { desc:'Com o braço a 90°, empurre a mão para cima contra a porta por 30–40 s. Bíceps em contração.',                      mistake:'Prender a respiração durante a contração isométrica' },
+  'Agachamento livre':                { desc:'Pés na largura dos ombros, desça abaixo de 90°. Joelhos seguem a direção dos pés.',                                 mistake:'Joelhos colapsando para dentro ao subir' },
+  'Agachamento búlgaro':              { desc:'Pé traseiro elevado, desça o joelho traseiro quase no chão. 70 % do peso na perna da frente.',                     mistake:'Tronco inclinando muito para frente' },
+  'Avanço alternado':                 { desc:'Passo largo à frente, joelho de trás quase toca o chão. Tronco ereto, olhar à frente.',                            mistake:'Joelho da frente ultrapassando a ponta do pé' },
+  'Cadeira na parede (wall sit)':     { desc:'Costas planas na parede, coxa paralela ao chão a 90°. Respire e segure o tempo.',                                  mistake:'Escorregar a posição sem perceber — cheque o ângulo dos joelhos' },
+  'Agachamento sumo':                 { desc:'Pés bem abertos com pontas para fora. Desça com joelhos seguindo os pés.',                                          mistake:'Joelhos colapsando para dentro na descida' },
+  'Ponte de glúteo':                  { desc:'Deitada de costas, pés no chão. Empurre o quadril para cima apertando o glúteo no topo.',                          mistake:'Usar a lombar em vez do glúteo para subir' },
+  'Ponte unilateral':                 { desc:'Uma perna estendida, suba com a força do glúteo da perna apoiada. Quadril nivelado.',                               mistake:'Deixar o quadril girar para o lado da perna levantada' },
+  'Abdução de quadril deitada':       { desc:'Deitada de lado, perna de cima sobe controlada até 45°. Não balance o tronco.',                                  mistake:'Rotacionar a perna para fora em vez de abduzir lateralmente' },
+  'Kickback (chute pra trás)':        { desc:'Em quatro apoios, chute uma perna para trás com o joelho dobrado a 90°. Aperte o glúteo.',                          mistake:'Arquear a lombar ao invés de contrair o glúteo' },
+  'Hip thrust no banco':              { desc:'Costas apoiadas no banco, empurre o quadril para cima com o glúteo. Queixo no peito.',                              mistake:'Queixo para cima — força o pescoço e tira o foco do glúteo' },
+  'Stiff em pé com mochila':          { desc:'Joelhos quase travados, desça o tronco mantendo a lombar neutra. Sinta o alongamento posterior.',                   mistake:'Arredondar a lombar — alto risco de lesão' },
+  'Curl de perna deitada (toalha)':   { desc:'Deitada de bruços, puxe os calcanhares em direção ao glúteo. Quadril no chão.',                                     mistake:'Levantar o quadril para compensar a falta de amplitude' },
+  'Elevação de panturrilha no degrau':{ desc:'Calcanhar abaixo do degrau para alongar, depois suba na ponta dos pés. Movimento completo.',                         mistake:'Movimento parcial sem descer abaixo do degrau' },
+  'Prancha':                          { desc:'Cotovelos sob os ombros, corpo reto da cabeça ao calcanhar. Respire normalmente.',                                   mistake:'Quadril alto ou afundado — perde o trabalho do core' },
+  'Bicicleta abdominal':              { desc:'Cotovelo em direção ao joelho oposto alternando. Não puxe o pescoço com as mãos.',                                  mistake:'Girar com o cotovelo em vez de com o tronco' },
+  'Russian twist':                    { desc:'Sentada com tronco inclinado, gire os ombros de um lado ao outro. Pés no ar aumenta a intensidade.',                  mistake:'Girar só os braços — o movimento deve vir do tronco' },
+  'Dead bug':                         { desc:'Deitada, braço e perna opostos descem sem tocar o chão. Lombar colada no chão.',                                     mistake:'Lombar desgrundada do chão — perde a proteção da coluna' },
+  'Hollow hold':                      { desc:'Deitada, braços acima da cabeça e pernas elevadas. Corpo forma uma banana invertida.',                               mistake:'Prender a respiração — respire controlado mantendo a tensão' },
+  'Prancha lateral':                  { desc:'Apoio no cotovelo, corpo reto lateral. Quadril alinhado com ombro e tornozelo.',                                    mistake:'Quadril caindo para baixo ou arqueando para cima' },
+  'Burpee':                           { desc:'Flexão, pula os pés para as mãos, salta com braços acima. Versão sem salto se precisar.',                           mistake:'Joelhos colapsando ao aterrissar' },
+  'Agachamento com salto':            { desc:'Agache e exploda para cima com os braços. Aterrisse suave com joelhos flexionados.',                                 mistake:'Aterrissar com os joelhos travados — impacto direto na articulação' },
+  'Mountain climbers':                { desc:'Em posição de flexão, joelhos alternam em direção ao peito em ritmo rápido.',                                       mistake:'Quadril muito alto — vira caminhada, perde o trabalho de core' },
+  'High knees':                       { desc:'Corrida no lugar com joelhos subindo até a altura do quadril. Braços em sincronia.',                                 mistake:'Não elevar o joelho — perde o trabalho cardio e de flexores' },
+  'Pular corda (real ou simulada)':   { desc:'Pulos pequenos na ponta dos pés, punhos girando. Simulado: imite o movimento dos braços.',                           mistake:'Pulos muito altos — gasta energia à toa e cansa mais rápido' },
+  'Caminhada rápida':                 { desc:'Ritmo que dificulta manter conversa. Braços dobrados a 90° se balançando.',                                        mistake:'Arrastar os pés ou dar passadas muito curtas' },
+  'Saudação ao sol':                  { desc:'Sequência fluida: de pé → mãos no chão → prancha → cobra → cachorro → de pé. Respire em cada transição.',           mistake:'Apressar a sequência sem sincronizar com a respiração' },
+  'Postura da criança':               { desc:'Ajoelhada com bacia sobre o calcanhar, braços estendidos à frente. Bacia afunda com a expiração.',                  mistake:'Tensionar os ombros — deixe-os cair naturalmente' },
+  'Gato-vaca':                        { desc:'Em quatro apoios, alterne coluna arqueada (vaca) e dobrada (gato). Um movimento por respiração.',                    mistake:'Mover só o pescoço sem mobilizar toda a coluna' },
+  'Pomba (pigeon pose)':              { desc:'Perna dianteira cruzada à frente, perna traseira estendida. Incline o tronco para aprofundar.',                    mistake:'Forçar a posição — respeite o limite atual do quadril' },
+  'Torção deitada':                   { desc:'Deitada de costas, joelho vai para um lado, braços abertos. Ombros no chão o tempo todo.',                          mistake:'Levantar o ombro oposto do chão para ir mais fundo' },
+  'Pernas na parede':                 { desc:'Quadril próximo à parede, pernas esticadas para cima. Relaxe os quadris e respire profundamente.',                  mistake:'Tensionar os pés e panturrilhas — deixe as pernas relaxarem' },
+  'Cachorro olhando pra baixo':       { desc:'Mãos e pés no chão, quadril alto em V invertido. Calcanhares tentam tocar o chão.',                                mistake:'Dobrar os joelhos demais — estique a parte de trás das pernas' },
+  'Flexão na parede':                 { desc:'Mãos na parede na altura do peito, corpo reto. Leve o peito até a parede e empurre de volta.',                   mistake:'Deixar o quadril ficar para trás em vez de mover o corpo inteiro' },
+  'Flexão inclinada (mãos no sofá)':  { desc:'Mãos no assento do sofá ou numa mesa firme, corpo reto. Desça o peito até a borda e suba.',                      mistake:'Apoiar em algo que escorrega. Use um móvel firme' },
+  'Tríceps francês com garrafa':      { desc:'Sentada, segure a garrafa com as duas mãos atrás da cabeça. Estenda os braços para cima e desça devagar.',      mistake:'Abrir os cotovelos para os lados. Mantenha apontados para a frente' },
+  'Senta e levanta da cadeira':       { desc:'Sente na ponta da cadeira e levante sem usar as mãos. Desça devagar até encostar de leve e suba de novo.',       mistake:'Cair sentada na cadeira. O controle na descida é o que fortalece' },
+  'Marcha no lugar':                  { desc:'Marche no lugar subindo os joelhos até onde for confortável, braços acompanhando. Sem pular.',                   mistake:'Bater o pé no chão com força. Pise macio' },
+  'Passo lateral (step touch)':       { desc:'Dê um passo para o lado e junte o outro pé, alternando os lados num ritmo constante. Braços acompanham.',         mistake:'Travar os joelhos. Mantenha-os levemente flexionados' }
+};
+
+// ══════════════════════════════════════════════
+// MODO RETOMADA (volta gradual depois de tempo parada)
+// ══════════════════════════════════════════════
+// Exercícios que ficam de fora enquanto o modo retomada está ligado
+const EX_DIFICIL = new Set(['Flexão diamante','Flexão declinada (pés no banco)','Flexão archer','Flexão fechada (mãos juntas)','Chin-up negativo','Pike push-up','Agachamento búlgaro','Hollow hold']);
+const EX_IMPACTO = new Set(['Agachamento com salto','Burpee','Pular corda (real ou simulada)','High knees']);
+const RETOMADA_SEMANAS = 8;
+
+function dataLocal(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function getRetomadaSemana() {
+  const p = getCurrentProfile();
+  if (!p || !p.retomada) return null;
+  const dias = Math.floor((new Date(dataLocal() + 'T12:00') - new Date(p.retomada.inicio + 'T12:00')) / 86400000);
+  return Math.floor(Math.max(dias, 0) / 7) + 1;
+}
+function ligarRetomada() {
+  updateCurrentProfile({ retomada: { inicio: dataLocal() } });
+  rebuildWorkout();
+}
+function desligarRetomada() {
+  updateCurrentProfile({ retomada: null });
+  rebuildWorkout();
+}
+function renderRetomadaStatus() {
+  const el = document.getElementById('retomada-status');
+  if (!el) return;
+  const semana = getRetomadaSemana();
+  if (semana === null) {
+    el.innerHTML = `<button class="btn btn-outline" style="margin-bottom:10px;border-color:var(--accent3);color:var(--accent3)" onclick="ligarRetomada()">🌱 Estou voltando a treinar depois de um tempo parada</button>`;
+    return;
+  }
+  const fase = semana <= 4
+    ? 'Treinos leves, sem salto e sem os exercícios mais difíceis. O foco agora é criar o hábito e acordar o corpo.'
+    : semana <= RETOMADA_SEMANAS
+      ? 'Você já pode ir até a intensidade média. Saltos e exercícios avançados continuam de fora.'
+      : 'Você completou as 8 semanas de retomada. Se estiver se sentindo bem, pode desligar o modo e liberar o treino completo.';
+  el.innerHTML = `<div class="retomada-box"><strong>🌱 Modo retomada · semana ${Math.min(semana, RETOMADA_SEMANAS)} de ${RETOMADA_SEMANAS}</strong><br>${fase}<br><button class="link-btn" onclick="desligarRetomada()">Desligar modo retomada</button></div>`;
+}
+
+// ══════════════════════════════════════════════
+// HISTÓRICO DE TREINOS
+// ══════════════════════════════════════════════
+let treinoAtual = null;
+
+function getWorkoutLog() {
+  const p = getCurrentProfile();
+  return (p && p.workout_log) || {};
+}
+// Exercícios feitos nos 2 dias anteriores (o de hoje não conta, senão o treino mudaria ao marcar como feito)
+function exerciciosRecentes() {
+  const log = getWorkoutLog();
+  const nomes = new Set();
+  for (let i = 1; i <= 2; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const t = log[dataLocal(d)];
+    if (t) t.exercises.forEach(n => nomes.add(n));
+  }
+  return nomes;
+}
+function marcarTreinoFeito() {
+  if (!treinoAtual) return;
+  const p = getCurrentProfile();
+  const log = p.workout_log || {};
+  log[dataLocal()] = {
+    title: treinoAtual.title,
+    intensity: treinoAtual.intensity,
+    exercises: treinoAtual.exercises.map(e => e.name),
+    hora: new Date().toTimeString().slice(0, 5)
+  };
+  updateCurrentProfile({ workout_log: log });
+  rebuildWorkout();
+  buildWeek();
+}
+function desfazerTreinoFeito() {
+  const p = getCurrentProfile();
+  const log = p.workout_log || {};
+  delete log[dataLocal()];
+  updateCurrentProfile({ workout_log: log });
+  rebuildWorkout();
+  buildWeek();
+}
+function inicioDaSemana(d) {
+  const x = new Date(d); x.setHours(12, 0, 0, 0);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); // segunda-feira
+  return x;
+}
+function renderWorkoutHistory() {
+  const el = document.getElementById('workout-history');
+  if (!el) return;
+  const log = getWorkoutLog();
+  const hoje = dataLocal();
+  const seg = inicioDaSemana(new Date());
+  const nomesDia = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+
+  let chips = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(seg); d.setDate(seg.getDate() + i);
+    const k = dataLocal(d);
+    chips += `<div class="hist-dia${log[k] ? ' feito' : ''}${k === hoje ? ' hoje' : ''}">${nomesDia[i]}<b>${log[k] ? '✓' : '·'}</b></div>`;
+  }
+
+  // Últimas 4 semanas, da mais recente para a mais antiga
+  let semanas = '';
+  for (let w = 0; w < 4; w++) {
+    const ini = new Date(seg); ini.setDate(seg.getDate() - 7 * w);
+    const itens = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(ini); d.setDate(ini.getDate() + i);
+      const t = log[dataLocal(d)];
+      if (!t) continue;
+      const rotulo = nomesDia[i] + ', ' + d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      itens.push(`<div class="hist-item"><div class="hist-item-top">${t.title}<span>${rotulo} · ${t.intensity}</span></div><div class="hist-ex">${t.exercises.join(' · ')}</div></div>`);
+    }
+    const nome = w === 0 ? 'Esta semana' : w === 1 ? 'Semana passada' : 'Semana de ' + ini.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    const qtd = itens.length + (itens.length === 1 ? ' treino' : ' treinos');
+    if (itens.length || w < 2) semanas += `<div class="hist-titulo">${nome} · ${qtd}</div>${itens.join('') || '<p style="font-size:12px;color:var(--muted)">Nenhum treino registrado.</p>'}`;
+  }
+
+  el.innerHTML = `<div class="card">
+    <div class="card-title">Meus treinos</div>
+    <div class="hist-semana">${chips}</div>
+    ${semanas}
+  </div>`;
+}
+
+function getExExtra(name) {
+  return EX_EXTRA[name] || { desc: '', mistake: '' };
+}
+
+
+// ══════════════════════════════════════════════
+// ONBOARDING
+// ══════════════════════════════════════════════
+let currentOBStep = 1;
+const TOTAL_OB_STEPS = 7;
+let obData = {};
+let obSelectedGoal = null;
+let obDislikes = new Set();
+
+function startOnboarding() {
+  currentOBStep = 1;
+  obData = {};
+  obSelectedGoal = null;
+  obDislikes = new Set();
+  document.querySelectorAll('.ob-step').forEach(s => s.classList.remove('active'));
+  document.querySelector('.ob-step[data-step="1"]').classList.add('active');
+  renderObProgress();
+  renderGoalOptions();
+  renderFoodPrefs(obDislikes, 'food-prefs-container', true);
+  if (window._oauthName) document.getElementById('ob-name').value = window._oauthName;
+  document.getElementById('onboarding-bg').classList.add('open');
+  document.getElementById('landing').style.display = 'none';
+}
+function renderObProgress() {
+  const el = document.getElementById('ob-progress');
+  el.innerHTML = '';
+  for (let i = 1; i <= TOTAL_OB_STEPS; i++) {
+    const d = document.createElement('div');
+    d.className = 'ob-progress-step' + (i <= currentOBStep ? ' done' : '');
+    el.appendChild(d);
+  }
+}
+function renderGoalOptions() {
+  document.getElementById('goal-options').innerHTML = GOAL_TYPES.map(g => `
+    <div class="goal-card${obSelectedGoal === g.id ? ' selected' : ''}" onclick="selectGoal('${g.id}')">
+      <div class="goal-card-title">${g.title}</div>
+      <div class="goal-card-desc">${g.desc}</div>
+    </div>
+  `).join('');
+}
+function selectGoal(id) {
+  obSelectedGoal = id;
+  renderGoalOptions();
+}
+function renderFoodPrefs(dislikesSet, containerId, isOnboarding) {
+  const cont = document.getElementById(containerId);
+  cont.innerHTML = '';
+  Object.entries(FOOD_CATALOG).forEach(([cat, items]) => {
+    const sec = document.createElement('div');
+    sec.className = 'food-section';
+    sec.innerHTML = `<div class="food-section-title">${cat}</div>
+      <div class="food-chips">
+        ${items.map(f => `<div class="food-chip${dislikesSet.has(f) ? ' disliked' : ''}" data-food="${f}">${f}</div>`).join('')}
+      </div>`;
+    cont.appendChild(sec);
+  });
+  cont.querySelectorAll('.food-chip').forEach(chip => {
+    chip.onclick = () => {
+      const f = chip.dataset.food;
+      if (dislikesSet.has(f)) dislikesSet.delete(f);
+      else dislikesSet.add(f);
+      chip.classList.toggle('disliked');
+      if (!isOnboarding) saveDislikesFromProfile(dislikesSet);
+    };
+  });
+}
+function saveDislikesFromProfile(set) {
+  updateCurrentProfile({ food_dislikes: Array.from(set) });
+  rebuildAfterPrefChange();
+}
+function nextStep(from) {
+  // Validate per step
+  if (from === 1) {
+    const name = document.getElementById('ob-name').value.trim();
+    const age = parseInt(document.getElementById('ob-age').value);
+    if (!name) return alert('Por favor, digite seu nome.');
+    if (!age || age < 14 || age > 80) return alert('Digite uma idade válida.');
+    obData.name = name; obData.age = age;
+  } else if (from === 2) {
+    const h = parseInt(document.getElementById('ob-height').value);
+    const w = parseFloat(document.getElementById('ob-weight').value);
+    if (!h || !w) return alert('Preencha altura e peso.');
+    obData.height = h; obData.weight = w;
+  } else if (from === 3) {
+    obData.measurements = {
+      waist: parseFloat(document.getElementById('ob-waist').value) || 0,
+      hip: parseFloat(document.getElementById('ob-hip').value) || 0,
+      chest: parseFloat(document.getElementById('ob-chest').value) || 0,
+      arm: parseFloat(document.getElementById('ob-arm').value) || 0,
+      thigh: parseFloat(document.getElementById('ob-thigh').value) || 0
+    };
+    // Pre-fill goal step with current values
+    setTimeout(() => {
+      document.getElementById('ob-weight-goal').value = obData.weight;
+      document.getElementById('ob-waist-goal').value = obData.measurements.waist || '';
+      document.getElementById('ob-hip-goal').value = obData.measurements.hip || '';
+      document.getElementById('ob-chest-goal').value = obData.measurements.chest || '';
+      document.getElementById('ob-arm-goal').value = obData.measurements.arm || '';
+      document.getElementById('ob-thigh-goal').value = obData.measurements.thigh || '';
+    }, 50);
+  } else if (from === 4) {
+    obData.weight_goal = parseFloat(document.getElementById('ob-weight-goal').value) || obData.weight;
+    obData.measurements_goal = {
+      waist: parseFloat(document.getElementById('ob-waist-goal').value) || obData.measurements.waist,
+      hip: parseFloat(document.getElementById('ob-hip-goal').value) || obData.measurements.hip,
+      chest: parseFloat(document.getElementById('ob-chest-goal').value) || obData.measurements.chest,
+      arm: parseFloat(document.getElementById('ob-arm-goal').value) || obData.measurements.arm,
+      thigh: parseFloat(document.getElementById('ob-thigh-goal').value) || obData.measurements.thigh
+    };
+  } else if (from === 5) {
+    if (!obSelectedGoal) return alert('Escolha um foco.');
+    obData.goal_type = obSelectedGoal;
+  } else if (from === 6) {
+    obData.food_dislikes = Array.from(obDislikes);
+  }
+
+  currentOBStep++;
+  document.querySelectorAll('.ob-step').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.ob-step[data-step="${currentOBStep}"]`).classList.add('active');
+  renderObProgress();
+}
+function prevStep(from) {
+  currentOBStep--;
+  document.querySelectorAll('.ob-step').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.ob-step[data-step="${currentOBStep}"]`).classList.add('active');
+  renderObProgress();
+}
+function finishOnboarding(skipCycle) {
+  if (!skipCycle) {
+    const start = document.getElementById('ob-cycle-start').value;
+    const length = parseInt(document.getElementById('ob-cycle-length').value) || 28;
+    if (start) {
+      obData.cycle_data = { start, length };
+    } else {
+      obData.cycle_data = null;
+    }
+  } else {
+    obData.cycle_data = null;
+  }
+
+  const profile = {
+    id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    name: obData.name,
+    age: obData.age,
+    height: obData.height,
+    weight: obData.weight,
+    weight_goal: obData.weight_goal,
+    measurements: obData.measurements,
+    measurements_goal: obData.measurements_goal,
+    goal_type: obData.goal_type,
+    food_dislikes: obData.food_dislikes || [],
+    cycle_data: obData.cycle_data,
+    logs: [],
+    daily_checks: {},
+    pain_log: {},
+    mood_log: {},
+    menu_selections: {},
+    workout_seed: {},
+    created_at: new Date().toISOString()
+  };
+
+  const profiles = getProfiles();
+  profiles.push(profile);
+  saveProfiles(profiles);
+  setCurrentProfileId(profile.id);
+
+  document.getElementById('onboarding-bg').classList.remove('open');
+  showApp();
+}
+
+// ══════════════════════════════════════════════
+// APP FLOW
+// ══════════════════════════════════════════════
+function init() {
+  migrateLegacyData();
+  const profiles = getProfiles();
+  const current = getCurrentProfile();
+
+  if (current) {
+    showApp();
+  } else {
+    showLanding(profiles);
+  }
+}
+
+function showLanding(profiles) {
+  document.getElementById('landing').style.display = 'flex';
+  document.getElementById('app').classList.remove('active');
+  renderExistingProfiles(profiles);
+}
+function renderExistingProfiles(profiles) {
+  const cont = document.getElementById('existing-profiles');
+  if (!profiles.length) { cont.innerHTML = ''; return; }
+  cont.innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:10px;text-align:center">Ou entre com um perfil existente</div>
+    ${profiles.map(p => `
+      <div class="profile-pick" onclick="enterProfile('${p.id}')">
+        <div class="profile-avatar">${p.name[0].toUpperCase()}</div>
+        <div class="profile-pick-info">
+          <div class="profile-pick-name">${p.name}</div>
+          <div class="profile-pick-meta">${p.height}cm · ${p.weight}kg · ${GOAL_TYPES.find(g=>g.id===p.goal_type)?.title || ''}</div>
+        </div>
+        <button class="profile-delete-btn" onclick="event.stopPropagation(); deleteProfile('${p.id}')">×</button>
+      </div>
+    `).join('')}
+  `;
+}
+function enterProfile(id) {
+  setCurrentProfileId(id);
+  showApp();
+}
+function deleteProfile(id) {
+  if (!confirm('Excluir este perfil? Todos os dados dele serão apagados.')) return;
+  const profiles = getProfiles().filter(p => p.id !== id);
+  saveProfiles(profiles);
+  if (getCurrentProfileId() === id) setCurrentProfileId(null);
+  showLanding(profiles);
+}
+function showApp() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  buildEverything();
+}
+function logout() {
+  setCurrentProfileId(null);
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_EMAIL_KEY);
+  document.getElementById('header-menu').classList.remove('open');
+  showLanding(getProfiles());
+}
+function switchProfile() {
+  setCurrentProfileId(null);
+  document.getElementById('header-menu').classList.remove('open');
+  init();
+}
+function toggleHeaderMenu(e) {
+  e.stopPropagation();
+  document.getElementById('header-menu').classList.toggle('open');
+}
+document.addEventListener('click', () => document.getElementById('header-menu').classList.remove('open'));
+
+// ══════════════════════════════════════════════
+// CYCLE LOGIC
+// ══════════════════════════════════════════════
+function getCurrentPhase() {
+  const p = getCurrentProfile();
+  if (!p || !p.cycle_data) return null;
+  const start = new Date(p.cycle_data.start + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diffDays = Math.floor((today - start) / 86400000);
+  if (diffDays < 0) return null;
+  const d = (diffDays % p.cycle_data.length) + 1;
+  if (d <= 5) return { phase: PHASES[0], day: d };
+  if (d <= 13) return { phase: PHASES[1], day: d };
+  if (d <= 16) return { phase: PHASES[2], day: d };
+  return { phase: PHASES[3], day: d };
+}
+function saveCycle() {
+  const start = document.getElementById('cycle-start-input').value;
+  const length = parseInt(document.getElementById('cycle-length-input').value) || 28;
+  if (!start) return alert('Selecione a data de início.');
+  updateCurrentProfile({ cycle_data: { start, length } });
+  buildEverything();
+}
+
+// ══════════════════════════════════════════════
+// PAIN & MOOD
+// ══════════════════════════════════════════════
+function todayKey() { return new Date().toISOString().slice(0,10); }
+function getTodayPain() {
+  const p = getCurrentProfile();
+  if (!p || !p.pain_log) return null;
+  return p.pain_log[todayKey()];
+}
+function getTodayMood() {
+  const p = getCurrentProfile();
+  if (!p || !p.mood_log) return null;
+  return p.mood_log[todayKey()];
+}
+function setPain(level) {
+  const p = getCurrentProfile();
+  if (!p.pain_log) p.pain_log = {};
+  p.pain_log[todayKey()] = level;
+  updateCurrentProfile({ pain_log: p.pain_log });
+  renderPainScale();
+  renderPainAdaptNotice();
+  rebuildWorkout();
+}
+function setMood(id) {
+  const p = getCurrentProfile();
+  if (!p.mood_log) p.mood_log = {};
+  p.mood_log[todayKey()] = id;
+  updateCurrentProfile({ mood_log: p.mood_log });
+  renderMoodGrid();
+  renderPainAdaptNotice();
+  rebuildWorkout();
+}
+function renderPainScale() {
+  const el = document.getElementById('pain-scale-dash');
+  const cur = getTodayPain();
+  el.innerHTML = '';
+  for (let i = 0; i <= 10; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'pain-dot' + (cur === i ? ' selected' : '');
+    dot.dataset.level = i;
+    dot.textContent = i;
+    dot.onclick = () => setPain(i);
+    el.appendChild(dot);
+  }
+}
+function renderMoodGrid() {
+  const el = document.getElementById('mood-grid-dash');
+  const cur = getTodayMood();
+  el.innerHTML = MOODS.map(m => `
+    <div class="mood-btn${cur === m.id ? ' selected' : ''}" onclick="setMood('${m.id}')">
+      <div class="mood-emoji">${m.emoji}</div>
+      <div class="mood-name">${m.name}</div>
+    </div>
+  `).join('');
+}
+function renderPainAdaptNotice() {
+  const pain = getTodayPain();
+  const mood = getTodayMood();
+  const el = document.getElementById('pain-adapt-dash');
+  const msgs = [];
+  if (pain !== null && pain !== undefined) {
+    if (pain >= 8) msgs.push(`<div class="pain-adapt-notice">🤲 Sua dor está muito intensa hoje. Recomendo descansar ou só fazer respiração e alongamento bem leve. Seu corpo precisa disso mais que de treino.</div>`);
+    else if (pain >= 5) msgs.push(`<div class="pain-adapt-notice">🌿 Dor considerável hoje. Adaptei seu treino pra mobilidade e movimento leve. Caminhada também é uma boa opção.</div>`);
+    else if (pain >= 3) msgs.push(`<div class="pain-adapt-notice" style="background:#3b2008;border-color:var(--accent4);color:var(--accent4)">💛 Dor leve detectada. Reduzi um pouco a intensidade do treino. Vai com calma.</div>`);
+  }
+  if (mood === 'cansada') msgs.push(`<div class="pain-adapt-notice" style="background:#1e2150;border-color:var(--accent2);color:var(--accent2)">😪 Você está cansada hoje. Reduzi a intensidade do treino pra não te sobrecarregar.</div>`);
+  else if (mood === 'triste') msgs.push(`<div class="pain-adapt-notice" style="background:#2a1a4e;border-color:var(--accent);color:var(--accent)">💜 Dia difícil. O treino foi suavizado. Movimento libera endorfina — vai no seu ritmo.</div>`);
+  el.innerHTML = msgs.join('');
+}
+
+// ══════════════════════════════════════════════
+// WORKOUT GENERATION
+// ══════════════════════════════════════════════
+function dayOfWeek() {
+  return new Date().getDay();
+}
+function getEffectiveIntensity() {
+  const pain = getTodayPain();
+  const mood = getTodayMood();
+  const cur = getCurrentPhase();
+  let intensity = cur ? cur.phase.intensity : 'medio';
+  if (pain !== null && pain !== undefined) {
+    if (pain >= 8) return 'descanso';
+    if (pain >= 5) return 'mobilidade';
+    if (pain >= 3) intensity = intensity === 'forte' ? 'medio' : 'leve';
+  }
+  if (mood === 'cansada' || mood === 'triste') {
+    if (intensity === 'forte') intensity = 'medio';
+    else if (intensity === 'medio') intensity = 'leve';
+  }
+  const semana = getRetomadaSemana();
+  if (semana !== null) {
+    if (semana <= 4) intensity = 'leve';
+    else if (intensity === 'forte') intensity = 'medio';
+  }
+  return intensity;
+}
+function getDailySeed() {
+  const p = getCurrentProfile();
+  return p.id + '_' + todayKey() + '_' + (p.workout_seed?.[todayKey()] || 0);
+}
+function regenerateWorkout() {
+  const p = getCurrentProfile();
+  if (!p.workout_seed) p.workout_seed = {};
+  p.workout_seed[todayKey()] = (p.workout_seed[todayKey()] || 0) + 1;
+  updateCurrentProfile({ workout_seed: p.workout_seed });
+  rebuildWorkout();
+}
+function seededRandom(seed) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = ((h << 5) - h) + seed.charCodeAt(i);
+    h |= 0;
+  }
+  return () => {
+    h = (h * 9301 + 49297) % 233280;
+    return h / 233280;
+  };
+}
+function pickFromGroup(group, count, rand) {
+  let arr = [...EX_LIBRARY[group]];
+  if (getRetomadaSemana() !== null) arr = arr.filter(e => !EX_DIFICIL.has(e.name) && !EX_IMPACTO.has(e.name));
+  const recentes = exerciciosRecentes();
+  const novos = arr.filter(e => !recentes.has(e.name));
+  if (novos.length >= count) arr = novos;
+  const result = [];
+  for (let i = 0; i < count && arr.length; i++) {
+    const idx = Math.floor(rand() * arr.length);
+    result.push(arr.splice(idx, 1)[0]);
+  }
+  return result;
+}
+function generateTodayWorkout() {
+  const intensity = getEffectiveIntensity();
+  const rand = seededRandom(getDailySeed());
+
+  if (intensity === 'descanso') {
+    return {
+      title: 'Descanso total — escuta seu corpo',
+      desc: 'Hoje seu corpo está pedindo pausa. Sem culpa, sem exercício.',
+      exercises: [
+        { ...EX_LIBRARY.mobilidade[5], usedIntensity: 'leve' },
+        { ...EX_LIBRARY.mobilidade[1], usedIntensity: 'leve' }
+      ],
+      intensity: 'descanso'
+    };
+  }
+
+  if (intensity === 'mobilidade') {
+    const mob = pickFromGroup('mobilidade', 5, rand);
+    return {
+      title: 'Mobilidade e alongamento',
+      desc: 'Movimento suave pra ativar o corpo sem sobrecarga.',
+      exercises: mob.map(e => ({ ...e, usedIntensity: 'leve' })),
+      intensity: 'mobilidade'
+    };
+  }
+
+  // Determine focus based on day of week + goal type
+  const p = getCurrentProfile();
+  const dow = dayOfWeek();
+  const goal = p.goal_type;
+
+  // Pattern by day of week (rotates focus)
+  // 0 Dom: rest/mobility
+  // 1 Seg: superior
+  // 2 Ter: inferior + glúteo
+  // 3 Qua: cardio + core
+  // 4 Qui: superior + core
+  // 5 Sex: inferior + cardio
+  // 6 Sáb: full body funcional
+  let focus;
+  if (dow === 0) focus = 'mobilidade';
+  else if (dow === 1) focus = 'superior';
+  else if (dow === 2) focus = 'inferior';
+  else if (dow === 3) focus = 'cardiocore';
+  else if (dow === 4) focus = 'superiorcore';
+  else if (dow === 5) focus = 'inferiorcardio';
+  else focus = 'fullbody';
+
+  // Adjust for goal
+  if (goal === 'emagrecimento') {
+    // More cardio days
+    if (dow === 1 || dow === 4) focus = 'superior';
+    else if (dow === 2 || dow === 5) focus = 'inferiorcardio';
+    else focus = 'cardiocore';
+  }
+  if (goal === 'hipertrofia') {
+    // Less cardio, more strength split
+    if (dow === 3) focus = 'superiorcore';
+    if (dow === 5) focus = 'inferior';
+  }
+
+  let exercises = [];
+  let title, desc;
+
+  if (focus === 'mobilidade') {
+    exercises = pickFromGroup('mobilidade', 5, rand);
+    title = 'Mobilidade ativa';
+    desc = 'Domingo de recuperação ativa. Move sem cansar.';
+  } else if (focus === 'superior') {
+    exercises = [
+      ...pickFromGroup('peito', 2, rand),
+      ...pickFromGroup('costas', 2, rand),
+      ...pickFromGroup('ombros', 1, rand),
+      ...pickFromGroup('tricep', 1, rand)
+    ];
+    title = 'Superior — peito, costas, ombro';
+    desc = 'Trem superior completo.';
+  } else if (focus === 'inferior') {
+    exercises = [
+      ...pickFromGroup('quadriceps', 2, rand),
+      ...pickFromGroup('gluteo', 2, rand),
+      ...pickFromGroup('posterior', 1, rand),
+      ...pickFromGroup('panturrilha', 1, rand)
+    ];
+    title = 'Inferior — pernas e glúteo';
+    desc = 'Treino completo de membros inferiores.';
+  } else if (focus === 'cardiocore') {
+    exercises = [
+      ...pickFromGroup('cardio', 3, rand),
+      ...pickFromGroup('core', 3, rand)
+    ];
+    title = 'Cardio + Core';
+    desc = 'Queima e tonificação no mesmo treino.';
+  } else if (focus === 'superiorcore') {
+    exercises = [
+      ...pickFromGroup('peito', 1, rand),
+      ...pickFromGroup('costas', 1, rand),
+      ...pickFromGroup('bicep', 1, rand),
+      ...pickFromGroup('core', 3, rand)
+    ];
+    title = 'Superior + Core';
+    desc = 'Trem superior com foco em estabilidade.';
+  } else if (focus === 'inferiorcardio') {
+    exercises = [
+      ...pickFromGroup('gluteo', 2, rand),
+      ...pickFromGroup('quadriceps', 1, rand),
+      ...pickFromGroup('cardio', 2, rand),
+      ...pickFromGroup('core', 1, rand)
+    ];
+    title = 'Inferior + Cardio';
+    desc = 'Glúteo, perna e queima.';
+  } else if (focus === 'fullbody') {
+    exercises = [
+      ...pickFromGroup('peito', 1, rand),
+      ...pickFromGroup('quadriceps', 1, rand),
+      ...pickFromGroup('costas', 1, rand),
+      ...pickFromGroup('gluteo', 1, rand),
+      ...pickFromGroup('core', 1, rand),
+      ...pickFromGroup('cardio', 1, rand)
+    ];
+    title = 'Full Body Funcional';
+    desc = 'Corpo todo em um só treino.';
+  }
+
+  return {
+    title, desc,
+    exercises: exercises.filter(Boolean).map(e => ({ ...e, usedIntensity: intensity })),
+    intensity
+  };
+}
+function rebuildWorkout() {
+  const workout = generateTodayWorkout();
+  treinoAtual = workout;
+  const feitoHoje = getWorkoutLog()[dataLocal()];
+  const feitoHtml = feitoHoje
+    ? `<div class="feito-box"><div class="feito-ok">✓ Treino de hoje registrado às ${feitoHoje.hora}</div><button class="link-btn" onclick="desfazerTreinoFeito()">Desfazer</button></div>`
+    : `<div class="feito-box"><button class="btn" onclick="marcarTreinoFeito()">✓ Marcar treino como feito</button></div>`;
+  const detail = document.getElementById('workout-detail');
+  const tag = workout.intensity === 'descanso' ? 'tag-red'
+    : workout.intensity === 'mobilidade' ? 'tag-green'
+    : workout.intensity === 'leve' ? 'tag-yellow'
+    : workout.intensity === 'forte' ? 'tag-purple' : 'tag-blue';
+
+  detail.innerHTML = `<div class="card">
+    <div class="card-title">${workout.title} <span class="tag ${tag}">${workout.intensity}</span></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">${workout.desc}</p>
+    <ul class="ex-list" style="list-style:none">
+      ${workout.exercises.map(ex => {
+        const extra = getExExtra(ex.name);
+        return `<li class="ex-media-row">
+          <div class="ex-media-top">
+            <div class="ex-info">
+              <div class="ex-icon">${ex.icon}</div>
+              <div><div class="ex-name">${ex.name}</div><div class="ex-muscle">${ex.muscle}</div></div>
+            </div>
+            <div class="ex-sets">${ex.sets[ex.usedIntensity] || ex.sets.medio}</div>
+          </div>
+          ${extra.desc ? `<p class="ex-desc">${extra.desc}</p>` : ''}
+          ${extra.mistake ? `<div class="ex-mistake">⚠️ ${extra.mistake}</div>` : ''}
+          ${ex.tip ? `<div class="ex-tip-line">💡 ${ex.tip}</div>` : ''}
+        </li>`;
+      }).join('')}
+    </ul>
+    <p style="font-size:11px;color:var(--muted);margin-top:14px">Descanso 60–90s entre séries · Aquecimento 5min antes</p>
+    ${feitoHtml}
+  </div>`;
+
+  renderRetomadaStatus();
+  renderWorkoutHistory();
+
+  // Also update today card on dashboard
+  buildTodayCard(workout);
+}
+function buildTodayCard(workout) {
+  if (!workout) workout = generateTodayWorkout();
+  const list = document.getElementById('today-exercises');
+  const tag = document.getElementById('today-tag');
+  tag.textContent = workout.title;
+  tag.className = 'tag ' + (workout.intensity === 'descanso' || workout.intensity === 'mobilidade' ? 'tag-red' : 'tag-purple');
+  list.innerHTML = workout.exercises.slice(0, 4).map(ex => `
+    <li class="ex-item">
+      <div class="ex-info"><div class="ex-icon">${ex.icon}</div>
+      <div><div class="ex-name">${ex.name}</div><div class="ex-muscle">${ex.muscle}</div></div></div>
+      <div class="ex-sets">${ex.sets[ex.usedIntensity] || ex.sets.medio}</div>
+    </li>`).join('');
+  if (workout.exercises.length > 4) {
+    list.innerHTML += `<li style="padding:8px 0;font-size:11px;color:var(--muted)">+ ${workout.exercises.length-4} exercícios na aba Treino</li>`;
+  }
+  document.getElementById('today-workout-note').textContent = workout.desc;
+}
+
+// ══════════════════════════════════════════════
+// MENU GENERATION
+// ══════════════════════════════════════════════
+function meetsDietPrefs(meal, dislikes) {
+  return !meal.ingredients.some(i => dislikes.includes(i));
+}
+function buildSingleMenu(rand, dislikes) {
+  const pick = (arr) => {
+    const filtered = arr.filter(m => meetsDietPrefs(m, dislikes));
+    if (!filtered.length) return arr[Math.floor(rand() * arr.length)]; // fallback
+    return filtered[Math.floor(rand() * filtered.length)];
+  };
+  return {
+    cafe: pick(MEAL_LIBRARY.cafe),
+    lancheManha: pick(MEAL_LIBRARY.lancheManha),
+    almoco: pick(MEAL_LIBRARY.almoco),
+    preTreino: pick(MEAL_LIBRARY.preTreino),
+    jantar: pick(MEAL_LIBRARY.jantar),
+    ceia: pick(MEAL_LIBRARY.ceia)
+  };
+}
+function getMenuSeed(idx) {
+  const p = getCurrentProfile();
+  const r = p.menu_selections?.[todayKey()]?.regen || 0;
+  return p.id + '_menu_' + todayKey() + '_' + idx + '_' + r;
+}
+function buildMenuOptions() {
+  const p = getCurrentProfile();
+  const dislikes = p.food_dislikes || [];
+  const cont = document.getElementById('menu-options');
+  const options = [];
+  for (let i = 0; i < 3; i++) {
+    const rand = seededRandom(getMenuSeed(i));
+    options.push(buildSingleMenu(rand, dislikes));
+  }
+  const selectedIdx = p.menu_selections?.[todayKey()]?.idx;
+  const labels = ['Opção A — Tradicional', 'Opção B — Variada', 'Opção C — Diferente'];
+  const mealLabels = [
+    { icon: '☀️', key: 'cafe', label: 'Café da manhã' },
+    { icon: '🥗', key: 'lancheManha', label: 'Lanche da manhã' },
+    { icon: '🍽️', key: 'almoco', label: 'Almoço' },
+    { icon: '💪', key: 'preTreino', label: 'Pré-treino' },
+    { icon: '🌿', key: 'jantar', label: 'Jantar' },
+    { icon: '🌙', key: 'ceia', label: 'Ceia' }
+  ];
+  cont.innerHTML = options.map((opt, i) => `
+    <div class="menu-option${selectedIdx === i ? ' selected' : ''}" onclick="selectMenu(${i})">
+      <div class="menu-option-title">${labels[i]} <span class="menu-option-badge">${selectedIdx === i ? '✓ escolhido' : 'toca pra escolher'}</span></div>
+      <ul class="ex-list" style="margin-top:8px">
+        ${mealLabels.map(m => `<li class="ex-item">
+          <div class="ex-info">
+            <div class="ex-icon">${m.icon}</div>
+            <div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em">${m.label}</div>
+              <div class="ex-name" style="font-size:12px">${opt[m.key].name}</div>
+              <div style="font-size:10px;color:var(--accent3);margin-top:2px">💡 ${opt[m.key].tip}</div>
+            </div>
+          </div>
+        </li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+  window._todayMenuOptions = options;
+  renderSelectedMenuDetail();
+}
+function selectMenu(idx) {
+  const p = getCurrentProfile();
+  if (!p.menu_selections) p.menu_selections = {};
+  if (!p.menu_selections[todayKey()]) p.menu_selections[todayKey()] = { regen: 0 };
+  p.menu_selections[todayKey()].idx = idx;
+  updateCurrentProfile({ menu_selections: p.menu_selections });
+  buildMenuOptions();
+}
+function regenerateMenus() {
+  const p = getCurrentProfile();
+  if (!p.menu_selections) p.menu_selections = {};
+  if (!p.menu_selections[todayKey()]) p.menu_selections[todayKey()] = {};
+  p.menu_selections[todayKey()].regen = (p.menu_selections[todayKey()].regen || 0) + 1;
+  delete p.menu_selections[todayKey()].idx;
+  updateCurrentProfile({ menu_selections: p.menu_selections });
+  buildMenuOptions();
+}
+function renderSelectedMenuDetail() {
+  document.getElementById('selected-menu-detail').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════
+// UI BUILDERS
+// ══════════════════════════════════════════════
+function openTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const navBtn = btn || Array.from(document.querySelectorAll('nav button')).find(b => b.textContent.toLowerCase().includes(name.toLowerCase().split('-')[0]));
+  if (navBtn) navBtn.classList.add('active');
+  if (name === 'treino') rebuildWorkout();
+  if (name === 'nutricao') { buildMenuOptions(); buildSuperfoods(); }
+  if (name === 'progresso') { renderProgressCompare(); renderLogs(); renderChart(); }
+  if (name === 'perfil') renderProfileTab();
+  if (name === 'ciclo') refreshCycleUI();
+}
+
+function buildHeader() {
+  const p = getCurrentProfile();
+  document.getElementById('header-meta').textContent = `${p.name} · ${p.height}cm · ${p.weight}kg`;
+  document.getElementById('header-menu-btn').textContent = p.name[0].toUpperCase();
+}
+
+function buildDashStats() {
+  const p = getCurrentProfile();
+  const imc = (p.weight / Math.pow(p.height / 100, 2)).toFixed(1);
+  const goalLabel = GOAL_TYPES.find(g => g.id === p.goal_type)?.title || '—';
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat"><div class="stat-label">Peso atual</div><div class="stat-value">${p.weight}<span class="stat-unit">kg</span></div></div>
+    <div class="stat"><div class="stat-label">IMC</div><div class="stat-value">${imc}</div></div>
+    <div class="stat"><div class="stat-label">Foco</div><div class="stat-value" style="font-size:13px;padding-top:4px">${goalLabel}</div></div>
+    <div class="stat"><div class="stat-label">Meta</div><div class="stat-value">${p.weight_goal}<span class="stat-unit">kg</span></div></div>
+  `;
+}
+
+function refreshDashboardPhase() {
+  const cur = getCurrentPhase();
+  const banner = document.getElementById('phase-banner-dash');
+  const badge = document.getElementById('header-phase-badge');
+  if (!cur) {
+    banner.innerHTML = `<div class="card" style="text-align:center;padding:14px"><span style="color:var(--muted);font-size:13px">Configure seu ciclo na aba <strong>Ciclo</strong> pra ver sugestões adaptadas</span></div>`;
+    badge.style.display = 'none';
+    return;
+  }
+  const { phase, day } = cur;
+  banner.innerHTML = `<div class="phase-banner" style="background:${phase.bg};border-color:${phase.border}">
+    <div class="ph-icon">${phase.icon}</div>
+    <div><div class="ph-title" style="color:${phase.color}">${phase.name} — ${phase.energy}</div>
+    <div class="ph-sub">${phase.desc}</div>
+    <div class="ph-day">Dia ${day} do ciclo · ${phase.days}</div></div></div>`;
+  badge.textContent = phase.icon + ' ' + phase.name;
+  badge.style.background = phase.bg;
+  badge.style.color = phase.color;
+  badge.style.display = 'inline-block';
+}
+
+function refreshCycleUI() {
+  const p = getCurrentProfile();
+  const cur = getCurrentPhase();
+  if (p.cycle_data) {
+    document.getElementById('cycle-start-input').value = p.cycle_data.start;
+    document.getElementById('cycle-length-input').value = p.cycle_data.length;
+  }
+  const bannerEl = document.getElementById('phase-banner-ciclo');
+  if (cur) {
+    bannerEl.innerHTML = `<div class="phase-banner" style="background:${cur.phase.bg};border-color:${cur.phase.border}">
+      <div class="ph-icon">${cur.phase.icon}</div>
+      <div><div class="ph-title" style="color:${cur.phase.color}">${cur.phase.name} — ${cur.phase.energy}</div>
+      <div class="ph-sub">${cur.phase.desc}</div>
+      <div class="ph-day">Dia ${cur.day} do ciclo</div></div></div>`;
+  } else {
+    bannerEl.innerHTML = '';
+  }
+  const grid = document.getElementById('phases-grid');
+  grid.innerHTML = PHASES.map(ph => {
+    const isCur = cur && cur.phase.id === ph.id;
+    return `<div class="phase-card ${isCur ? 'current' : ''}" style="background:${ph.bg};border-color:${isCur ? ph.color : ph.border}">
+      <div class="phase-card-title" style="color:${ph.color}">${ph.icon} ${ph.name} ${isCur ? '← você está aqui' : ''}</div>
+      <div class="phase-card-days" style="color:${ph.color}">${ph.days} · Energia: ${ph.energy}</div>
+      <div class="phase-card-body">${ph.desc}</div>
+    </div>`;
+  }).join('');
+  const detail = document.getElementById('phase-detail-ciclo');
+  if (cur) {
+    const ph = cur.phase;
+    detail.innerHTML = `<div class="card-title" style="color:${ph.color}">${ph.icon} Fase atual: ${ph.name}</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:14px;margin-top:12px">
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:700">TREINO</div><div style="font-size:12px;line-height:1.5">${ph.workout}</div></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:700">NUTRIÇÃO</div><div style="font-size:12px;line-height:1.5">${ph.nutrition}</div></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:700">PELE</div><div style="font-size:12px;line-height:1.5">${ph.skin}</div></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:700">SONO</div><div style="font-size:12px;line-height:1.5">${ph.sleep}</div></div>
+      </div>`;
+  } else {
+    detail.innerHTML = '<p style="color:var(--muted);font-size:13px">Salve o início do ciclo pra ver detalhes.</p>';
+  }
+}
+
+function buildWeek() {
+  const grid = document.getElementById('week-grid');
+  const today = new Date().getDay();
+  const labels = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const types = ['Mob','Sup','Inf','Card','Sup+','Inf+','Full'];
+  const log = getWorkoutLog();
+  const seg = inicioDaSemana(new Date());
+  grid.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const isToday = i === today;
+    const d = new Date(seg); d.setDate(seg.getDate() + ((i + 6) % 7));
+    const div = document.createElement('div');
+    div.className = 'day' + (isToday ? ' active' : '');
+    div.innerHTML = `<div class="day-name">${labels[i]}</div><div class="day-type train">${types[i]}</div>${log[dataLocal(d)] ? '<div class="feito-marca">✓</div>' : ''}`;
+    grid.appendChild(div);
+  }
+}
+
+function buildDailyChecks() {
+  const p = getCurrentProfile();
+  const phase = getCurrentPhase();
+  const checks = phase ? phase.phase.checks : DAILY_CHECKS_DEFAULT;
+  if (!p.daily_checks) p.daily_checks = {};
+  const today = todayKey();
+  if (!p.daily_checks[today]) p.daily_checks[today] = {};
+  const state = p.daily_checks[today];
+  const el = document.getElementById('daily-checks');
+  el.innerHTML = '';
+  checks.forEach((c, i) => {
+    const done = state[i];
+    const row = document.createElement('div');
+    row.className = 'check-row' + (done ? ' done' : '');
+    row.innerHTML = `<input type="checkbox" id="chk${i}" ${done ? 'checked' : ''}><label for="chk${i}">${c}</label>`;
+    row.querySelector('input').onchange = (e) => {
+      state[i] = e.target.checked;
+      updateCurrentProfile({ daily_checks: p.daily_checks });
+      row.classList.toggle('done', e.target.checked);
+    };
+    el.appendChild(row);
+  });
+}
+
+function buildNutritionStats() {
+  const p = getCurrentProfile();
+  const protein = Math.round(p.weight * 1.75);
+  let cals;
+  if (p.goal_type === 'emagrecimento') cals = Math.round(p.weight * 25);
+  else if (p.goal_type === 'hipertrofia') cals = Math.round(p.weight * 35);
+  else cals = Math.round(p.weight * 30);
+  document.getElementById('nutrition-stats').innerHTML = `
+    <div class="stat"><div class="stat-label">Calorias/dia</div><div class="stat-value">${cals}<span class="stat-unit">kcal</span></div></div>
+    <div class="stat"><div class="stat-label">Proteína</div><div class="stat-value">${protein}<span class="stat-unit">g</span></div></div>
+    <div class="stat"><div class="stat-label">Água</div><div class="stat-value">2,5<span class="stat-unit">L</span></div></div>
+  `;
+  document.getElementById('nutrition-note').textContent = `Proteína = 1,75g/kg · Calorias ajustadas pro foco: ${GOAL_TYPES.find(g=>g.id===p.goal_type)?.title}`;
+}
+
+const SUPERFOODS = [
+  { icon: '🐟', name: 'Salmão', tags: ['Pele','Sono','Músculo'], desc: 'Ômega-3, proteína completa, vitamina D' },
+  { icon: '🥚', name: 'Ovos', tags: ['Músculo','Sono'], desc: 'Proteína completa, triptofano pra melatonina' },
+  { icon: '🥑', name: 'Abacate', tags: ['Pele','Sono'], desc: 'Vitamina E, magnésio, gordura boa' },
+  { icon: '🫐', name: 'Blueberry', tags: ['Anti-ox'], desc: 'Antioxidantes que combatem radicais livres' },
+  { icon: '🥦', name: 'Brócolis', tags: ['Pele','Saúde'], desc: 'Vitamina C (colágeno), ferro, folato' },
+  { icon: '🌰', name: 'Castanha-do-pará', tags: ['Sono'], desc: '1 unidade/dia = selênio pra tireoide' },
+  { icon: '🫘', name: 'Feijão', tags: ['Ferro','Ciclo'], desc: 'Ferro vegetal fundamental na menstruação' },
+  { icon: '🐠', name: 'Sardinha', tags: ['Ômega-3'], desc: 'Anti-inflamatória, vitamina D e cálcio' }
+];
+function buildSuperfoods() {
+  const p = getCurrentProfile();
+  const dislikes = p.food_dislikes || [];
+  document.getElementById('superfood-grid').innerHTML = SUPERFOODS
+    .filter(s => !dislikes.includes(s.name) && !dislikes.some(d => s.name.toLowerCase().includes(d.toLowerCase().split(' ')[0])))
+    .map(s => `<div class="tip-card"><div class="tip-icon">${s.icon}</div>
+      <div class="tip-body"><div class="tip-title">${s.name} <span style="font-size:10px;color:var(--accent);font-weight:500">${s.tags.join(' · ')}</span></div>${s.desc}</div></div>`).join('');
+}
+
+const SLEEP_TIPS = [
+  { icon: '🌙', title: 'Desligue telas 1h antes', body: 'A luz azul inibe a melatonina. Troque por livro ou meditação.' },
+  { icon: '🌡️', title: 'Quarto frio (18–20°C)', body: 'A queda de temperatura corporal dispara o sono.' },
+  { icon: '☕', title: 'Sem cafeína após 14h', body: 'Cafeína tem meia-vida de 6h.' },
+  { icon: '🍌', title: 'Magnésio no jantar', body: 'Banana, abacate, sementes de abóbora relaxam.' },
+  { icon: '⏰', title: 'Horário fixo', body: 'Acordar sempre no mesmo horário regula o ritmo circadiano.' }
+];
+const SKIN_TIPS = [
+  { icon: '💧', title: '2,5L de água por dia', body: 'Hidratação interna = pele mais firme.' },
+  { icon: '🌿', title: 'Vitamina C diária', body: 'Ativam síntese de colágeno e clareiam manchas.' },
+  { icon: '🐟', title: 'Ômega-3 todo dia', body: 'Reduz inflamação — menos acne, pele mais lisa.' },
+  { icon: '🚫', title: 'Reduza açúcar e lácteos', body: 'Pico de insulina = mais acne.' },
+  { icon: '😴', title: 'Sono = colágeno', body: 'GH repara colágeno durante o sono.' }
+];
+const NUTRIENTS = [
+  { name: 'Vitamina C', goal: 'Colágeno + imunidade', foods: 'Acerola, kiwi, pimentão', color: '#f97316' },
+  { name: 'Ômega-3', goal: 'Anti-inflamação, pele', foods: 'Salmão, linhaça', color: '#818cf8' },
+  { name: 'Magnésio', goal: 'Sono e TPM', foods: 'Castanhas, abacate, banana', color: '#34d399' },
+  { name: 'Zinco', goal: 'Pele e hormônios', foods: 'Carne, abóbora', color: '#c084fc' },
+  { name: 'Vitamina D', goal: 'Humor e imunidade', foods: 'Sol, salmão, ovo', color: '#fbbf24' },
+  { name: 'Ferro', goal: 'Energia e ciclo', foods: 'Feijão, espinafre + vit C', color: '#f87171' }
+];
+const NIGHT_ROUTINE = [
+  { time: '21h', action: 'Jantar leve com triptofano', icon: '🍽️' },
+  { time: '21:30h', action: 'Chá de camomila ou maracujá', icon: '🍵' },
+  { time: '22h', action: 'Banho morno', icon: '🚿' },
+  { time: '22:30h', action: 'Telas desligadas — leitura', icon: '📚' },
+  { time: '23h', action: 'Dormir (7–8h)', icon: '😴' }
+];
+function buildSleepSkin() {
+  document.getElementById('sleep-tips').innerHTML = SLEEP_TIPS.map(t => `<div class="tip-card"><div class="tip-icon">${t.icon}</div><div class="tip-body"><div class="tip-title">${t.title}</div>${t.body}</div></div>`).join('');
+  document.getElementById('skin-tips').innerHTML = SKIN_TIPS.map(t => `<div class="tip-card"><div class="tip-icon">${t.icon}</div><div class="tip-body"><div class="tip-title">${t.title}</div>${t.body}</div></div>`).join('');
+  document.getElementById('nutrients-grid').innerHTML = NUTRIENTS.map(n => `<div class="tip-card">
+    <div class="tip-icon" style="font-size:13px;width:38px;height:38px;border-radius:8px;background:${n.color}22;display:flex;align-items:center;justify-content:center;color:${n.color};font-weight:700;flex-shrink:0">${n.name.slice(0,2)}</div>
+    <div class="tip-body"><div class="tip-title" style="color:${n.color}">${n.name}</div>
+    <div style="font-size:11px;color:var(--muted)">${n.goal}</div>
+    <div style="font-size:11px;margin-top:3px">${n.foods}</div></div></div>`).join('');
+  document.getElementById('night-routine').innerHTML = NIGHT_ROUTINE.map(r => `<div class="check-row" style="cursor:default">
+    <div style="font-size:18px">${r.icon}</div>
+    <div><span style="color:var(--accent);font-size:11px;font-weight:700">${r.time}</span><span style="font-size:13px;margin-left:8px">${r.action}</span></div></div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// PROGRESS
+// ══════════════════════════════════════════════
+function saveLog() {
+  const p = getCurrentProfile();
+  const w = parseFloat(document.getElementById('inp-weight').value);
+  if (!w) return alert('Insira ao menos o peso.');
+  const log = {
+    date: new Date().toLocaleDateString('pt-BR'),
+    weight: w,
+    waist: parseFloat(document.getElementById('inp-waist').value) || null,
+    hip: parseFloat(document.getElementById('inp-hip').value) || null,
+    chest: parseFloat(document.getElementById('inp-chest').value) || null,
+    arm: parseFloat(document.getElementById('inp-arm').value) || null,
+    thigh: parseFloat(document.getElementById('inp-thigh').value) || null,
+    phase: getCurrentPhase()?.phase.name || ''
+  };
+  if (!p.logs) p.logs = [];
+  p.logs.push(log);
+  // Update profile current measurements
+  const updates = { logs: p.logs, weight: w };
+  const m = { ...p.measurements };
+  if (log.waist) m.waist = log.waist;
+  if (log.hip) m.hip = log.hip;
+  if (log.chest) m.chest = log.chest;
+  if (log.arm) m.arm = log.arm;
+  if (log.thigh) m.thigh = log.thigh;
+  updates.measurements = m;
+  updateCurrentProfile(updates);
+  renderProgressCompare();
+  renderLogs();
+  renderChart();
+  buildDashStats();
+  buildHeader();
+}
+function renderProgressCompare() {
+  const p = getCurrentProfile();
+  const m = p.measurements || {};
+  const mg = p.measurements_goal || {};
+  document.getElementById('compare-now').innerHTML = `
+    <div class="compare-row"><span class="compare-label">Peso</span><span class="compare-cur">${p.weight} kg</span></div>
+    <div class="compare-row"><span class="compare-label">Cintura</span><span class="compare-cur">${m.waist || '—'} cm</span></div>
+    <div class="compare-row"><span class="compare-label">Quadril</span><span class="compare-cur">${m.hip || '—'} cm</span></div>
+    <div class="compare-row"><span class="compare-label">Peito</span><span class="compare-cur">${m.chest || '—'} cm</span></div>
+    <div class="compare-row"><span class="compare-label">Braço</span><span class="compare-cur">${m.arm || '—'} cm</span></div>
+    <div class="compare-row"><span class="compare-label">Coxa</span><span class="compare-cur">${m.thigh || '—'} cm</span></div>
+  `;
+  document.getElementById('compare-goal').innerHTML = `
+    <div class="compare-row"><span class="compare-label">Peso</span><span class="compare-goal">${p.weight_goal} kg</span></div>
+    <div class="compare-row"><span class="compare-label">Cintura</span><span class="compare-goal">${mg.waist || '—'} cm</span></div>
+    <div class="compare-row"><span class="compare-label">Quadril</span><span class="compare-goal">${mg.hip || '—'} cm</span></div>
+    <div class="compare-row"><span class="compare-label">Peito</span><span class="compare-goal">${mg.chest || '—'} cm</span></div>
+    <div class="compare-row"><span class="compare-label">Braço</span><span class="compare-goal">${mg.arm || '—'} cm</span></div>
+    <div class="compare-row"><span class="compare-label">Coxa</span><span class="compare-goal">${mg.thigh || '—'} cm</span></div>
+  `;
+  const metrics = [
+    { label: 'Peso', cur: p.weight, goal: p.weight_goal, key: 'weight' },
+    { label: 'Cintura', cur: m.waist, goal: mg.waist, key: 'waist' },
+    { label: 'Quadril', cur: m.hip, goal: mg.hip, key: 'hip' },
+    { label: 'Peito', cur: m.chest, goal: mg.chest, key: 'chest' },
+    { label: 'Braço', cur: m.arm, goal: mg.arm, key: 'arm' },
+    { label: 'Coxa', cur: m.thigh, goal: mg.thigh, key: 'thigh' }
+  ];
+  const logs = p.logs || [];
+  document.getElementById('goal-progress').innerHTML = metrics.filter(x => x.cur && x.goal).map(x => {
+    const cur = parseFloat(x.cur);
+    const goal = parseFloat(x.goal);
+    const absDiff = Math.abs(cur - goal);
+    // Use first log entry as starting point; fall back to current if no log exists yet
+    const firstLog = logs.find(l => l[x.key] != null && l[x.key] !== 0);
+    const start = firstLog ? parseFloat(firstLog[x.key]) : cur;
+    const range = goal - start;
+    let pct;
+    if (Math.abs(range) < 0.01) {
+      pct = 100;
+    } else {
+      pct = Math.max(0, Math.min(100, ((cur - start) / range) * 100));
+    }
+    const statusText = absDiff < 0.05
+      ? `<span style="color:var(--accent3)">Meta atingida!</span>`
+      : `faltam ${absDiff.toFixed(1)}`;
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+        <span>${x.label}</span><span style="color:var(--muted)">${cur} → ${goal} (${statusText})</span></div>
+      <div class="progress-bar"><div class="progress-bar-fill" style="width:${pct.toFixed(0)}%"></div></div>
+      <div style="text-align:right;font-size:10px;color:var(--muted);margin-top:3px">${pct.toFixed(0)}% concluído</div>
+    </div>`;
+  }).join('') || '<p style="color:var(--muted);font-size:12px">Registre suas medidas para ver o progresso.</p>';
+  fillGoalInputs();
+  fillMeasurementInputs();
+}
+function fillGoalInputs() {
+  const p = getCurrentProfile();
+  document.getElementById('goal-weight').value = p.weight_goal || '';
+  document.getElementById('goal-waist').value = p.measurements_goal?.waist || '';
+  document.getElementById('goal-hip').value = p.measurements_goal?.hip || '';
+  document.getElementById('goal-chest').value = p.measurements_goal?.chest || '';
+  document.getElementById('goal-arm').value = p.measurements_goal?.arm || '';
+  document.getElementById('goal-thigh').value = p.measurements_goal?.thigh || '';
+}
+function fillMeasurementInputs() {
+  const p = getCurrentProfile();
+  document.getElementById('inp-weight').value = p.weight || '';
+  document.getElementById('inp-waist').value = p.measurements?.waist || '';
+  document.getElementById('inp-hip').value = p.measurements?.hip || '';
+  document.getElementById('inp-chest').value = p.measurements?.chest || '';
+  document.getElementById('inp-arm').value = p.measurements?.arm || '';
+  document.getElementById('inp-thigh').value = p.measurements?.thigh || '';
+}
+function saveGoals() {
+  const p = getCurrentProfile();
+  const weight_goal = parseFloat(document.getElementById('goal-weight').value);
+  if (!weight_goal) return alert('Insira ao menos o peso meta.');
+  const mg = p.measurements_goal || {};
+  const measurements_goal = {
+    waist: parseFloat(document.getElementById('goal-waist').value) || mg.waist || 0,
+    hip: parseFloat(document.getElementById('goal-hip').value) || mg.hip || 0,
+    chest: parseFloat(document.getElementById('goal-chest').value) || mg.chest || 0,
+    arm: parseFloat(document.getElementById('goal-arm').value) || mg.arm || 0,
+    thigh: parseFloat(document.getElementById('goal-thigh').value) || mg.thigh || 0
+  };
+  updateCurrentProfile({ weight_goal, measurements_goal });
+  renderProgressCompare();
+  buildDashStats();
+  const btn = document.querySelector('[onclick="saveGoals()"]');
+  const orig = btn.textContent;
+  btn.textContent = 'Salvo ✓';
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1800);
+}
+function renderLogs() {
+  const p = getCurrentProfile();
+  const logs = p.logs || [];
+  document.getElementById('log-list').innerHTML = logs.slice(-5).reverse().map(l =>
+    `<div class="log-entry"><span class="log-date">${l.date}</span><span class="log-val">${l.weight}kg</span><span style="font-size:11px;color:var(--muted)">${l.phase || ''}</span></div>`
+  ).join('') || '<p style="color:var(--muted);font-size:12px">Nenhum registro ainda.</p>';
+}
+function renderChart() {
+  const p = getCurrentProfile();
+  const logs = p.logs || [];
+  const canvas = document.getElementById('weight-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 300;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (logs.length < 2) {
+    ctx.fillStyle = '#8b8a9b'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Registre pelo menos 2 pesos pra ver o gráfico', canvas.width/2, 80);
+    return;
+  }
+  const weights = logs.map(l => l.weight);
+  const min = Math.min(...weights, p.weight_goal) - 1;
+  const max = Math.max(...weights, p.weight_goal) + 1;
+  const W = canvas.width, H = canvas.height, pad = 20;
+  const toX = i => pad + (i / (logs.length - 1)) * (W - 2*pad);
+  const toY = v => H - pad - ((v - min) / (max - min)) * (H - 2*pad);
+  // Goal line
+  ctx.strokeStyle = '#34d39955'; ctx.setLineDash([4,4]); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad, toY(p.weight_goal)); ctx.lineTo(W-pad, toY(p.weight_goal)); ctx.stroke();
+  ctx.setLineDash([]);
+  // Weight line
+  ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.beginPath();
+  logs.forEach((l, i) => i === 0 ? ctx.moveTo(toX(i), toY(l.weight)) : ctx.lineTo(toX(i), toY(l.weight)));
+  ctx.stroke();
+  logs.forEach((l, i) => { ctx.fillStyle = '#c084fc'; ctx.beginPath(); ctx.arc(toX(i), toY(l.weight), 4, 0, Math.PI*2); ctx.fill(); });
+}
+
+// ══════════════════════════════════════════════
+// PROFILE TAB
+// ══════════════════════════════════════════════
+function renderProfileTab() {
+  const p = getCurrentProfile();
+  document.getElementById('profile-info').innerHTML = `
+    <div class="profile-section-title">Identificação</div>
+    <div style="font-size:14px">${p.name}, ${p.age} anos · ${p.height}cm</div>
+    <div class="profile-section-title">Preferências alimentares</div>
+    <div class="preference-summary">
+      ${p.food_dislikes && p.food_dislikes.length ? p.food_dislikes.map(f => `<span class="disliked">${f}</span>`).join('') : 'Sem restrições cadastradas.'}
+    </div>
+    <div class="profile-section-title">Criado em</div>
+    <div style="font-size:12px;color:var(--muted)">${new Date(p.created_at).toLocaleDateString('pt-BR')}</div>
+  `;
+  document.getElementById('prof-name').value = p.name;
+  document.getElementById('prof-age').value = p.age;
+  document.getElementById('prof-height').value = p.height;
+  document.getElementById('prof-goal-type').value = p.goal_type;
+  const set = new Set(p.food_dislikes || []);
+  renderFoodPrefs(set, 'profile-foods-container', false);
+}
+function saveProfileData() {
+  const name = document.getElementById('prof-name').value.trim();
+  const age = parseInt(document.getElementById('prof-age').value);
+  const height = parseInt(document.getElementById('prof-height').value);
+  const goalType = document.getElementById('prof-goal-type').value;
+  if (!name || !age || !height) return alert('Preencha nome, idade e altura.');
+  updateCurrentProfile({ name, age, height, goal_type: goalType });
+  buildEverything();
+  alert('Dados atualizados.');
+}
+function rebuildAfterPrefChange() {
+  buildMenuOptions();
+  buildSuperfoods();
+}
+
+// ══════════════════════════════════════════════
+// STEPPER
+// ══════════════════════════════════════════════
+function stepperAdjust(id, direction) {
+  const inp = document.getElementById(id);
+  const step = parseFloat(inp.step) || 1;
+  const val = parseFloat(inp.value) || 0;
+  inp.value = Math.round((val + direction * step) * 100) / 100;
+}
+
+// ══════════════════════════════════════════════
+// BUILD ALL
+// ══════════════════════════════════════════════
+function buildEverything() {
+  buildHeader();
+  buildDashStats();
+  refreshDashboardPhase();
+  renderPainScale();
+  renderMoodGrid();
+  renderPainAdaptNotice();
+  buildWeek();
+  rebuildWorkout();
+  buildDailyChecks();
+  buildNutritionStats();
+  buildMenuOptions();
+  buildSuperfoods();
+  buildSleepSkin();
+  refreshCycleUI();
+  renderProgressCompare();
+  renderLogs();
+  setTimeout(renderChart, 100);
+}
+
+// ══════════════════════════════════════════════
+// AUTH (GoTrue / Netlify Identity direct API)
+// ══════════════════════════════════════════════
+const GOTRUE = '/.netlify/identity';
+const AUTH_TOKEN_KEY = 'ciclo_auth_token';
+const AUTH_EMAIL_KEY = 'ciclo_auth_email';
+let _authMode = 'login';
+
+function showAuthGate() {
+  document.getElementById('auth-gate').classList.add('open');
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').classList.remove('active');
+}
+function hideAuthGate() {
+  document.getElementById('auth-gate').classList.remove('open');
+}
+function toggleAuthMode() {
+  _authMode = _authMode === 'login' ? 'signup' : 'login';
+  const isLogin = _authMode === 'login';
+  document.getElementById('auth-title').textContent = isLogin ? 'Bem-vinda de volta' : 'Criar conta';
+  document.getElementById('auth-sub').textContent = isLogin ? 'Entre com seu e-mail e senha para acessar o app.' : 'Crie sua conta gratuita para começar.';
+  document.getElementById('auth-btn').textContent = isLogin ? 'Entrar' : 'Criar conta';
+  document.querySelector('#auth-gate [onclick="toggleAuthMode()"]').textContent = isLogin ? 'Criar conta' : 'Já tenho conta';
+  document.getElementById('auth-error').style.display = 'none';
+}
+function setAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+async function handleAuthSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const btn = document.getElementById('auth-btn');
+  document.getElementById('auth-error').style.display = 'none';
+  if (!email || !password) return setAuthError('Preencha e-mail e senha.');
+  if (password.length < 6) return setAuthError('A senha precisa ter pelo menos 6 caracteres.');
+  btn.textContent = 'Carregando…';
+  btn.disabled = true;
+  try {
+    if (_authMode === 'signup') {
+      const sr = await fetch(`${GOTRUE}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      if (!sr.ok) {
+        const e = await sr.json();
+        throw new Error(e.msg || 'Erro ao criar conta.');
+      }
+    }
+    const params = new URLSearchParams();
+    params.append('grant_type', 'password');
+    params.append('username', email);
+    params.append('password', password);
+    const lr = await fetch(`${GOTRUE}/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    });
+    if (!lr.ok) {
+      const e = await lr.json();
+      throw new Error(e.error_description || 'E-mail ou senha incorretos.');
+    }
+    const data = await lr.json();
+    localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+    localStorage.setItem(AUTH_EMAIL_KEY, email);
+    window._oauthName = email.split('@')[0];
+    hideAuthGate();
+    init();
+  } catch (err) {
+    setAuthError(err.message);
+    btn.textContent = _authMode === 'login' ? 'Entrar' : 'Criar conta';
+    btn.disabled = false;
+  }
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
