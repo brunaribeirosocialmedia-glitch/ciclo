@@ -75,6 +75,10 @@
   .goal-card.selected { border-color: var(--accent); background: #2a1a4e; }
   .goal-card-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
   .goal-card-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .goal-card-specs { list-style: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: grid; gap: 6px; }
+  .goal-card-specs li { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .goal-card-specs b { color: var(--text); font-weight: 600; }
+  .goal-info { margin-top: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
 
   /* Food preferences */
   .food-section { margin-bottom: 18px; }
@@ -707,12 +711,13 @@
     <div class="field-row">
       <div class="input-group"><label>Altura (cm)</label><input type="number" id="prof-height" /></div>
       <div class="input-group"><label>Objetivo</label>
-        <select id="prof-goal-type">
+        <select id="prof-goal-type" onchange="renderProfileGoalInfo()">
           <option value="recomposicao">Recomposição</option>
           <option value="hipertrofia">Hipertrofia</option>
           <option value="emagrecimento">Emagrecimento</option>
           <option value="tonificacao">Tonificação</option>
         </select>
+        <div id="prof-goal-info" class="goal-info"></div>
       </div>
     </div>
     <button class="btn btn-sm" onclick="saveProfileData()">Salvar alterações</button>
@@ -806,12 +811,36 @@ const FOOD_CATALOG = {
   gorduras: ['Castanha-do-pará','Castanha de caju','Amêndoa','Nozes','Pasta de amendoim','Azeite de oliva','Sementes de chia','Sementes de abóbora','Coco','Manteiga ghee','Óleo de coco','Linhaça','Gergelim','Pistache','Tahine','Macadâmia','Sementes de girassol']
 };
 
+// para: pra quem é · semana: como fica o treino · comida: ajuste de calorias (ver buildNutritionStats)
 const GOAL_TYPES = [
-  { id: 'hipertrofia', title: 'Hipertrofia', desc: 'Ganhar massa muscular. Mais carga, mais proteína, leve superávit calórico.' },
-  { id: 'emagrecimento', title: 'Emagrecimento', desc: 'Reduzir gordura corporal. Mais cardio, déficit calórico moderado.' },
-  { id: 'recomposicao', title: 'Recomposição', desc: 'Trocar gordura por músculo mantendo o peso. Equilíbrio entre força e cardio.' },
-  { id: 'tonificacao', title: 'Tonificação', desc: 'Definir o corpo. Treino de força moderada + manutenção calórica.' }
+  { id: 'hipertrofia', title: 'Hipertrofia', desc: 'Ganhar massa muscular. Mais carga, mais proteína, leve superávit calórico.',
+    para: 'Quer ganhar músculo e ver o corpo mais firme e com mais volume, e não se importa se o peso na balança subir um pouco.',
+    semana: 'Força quase todos os dias, alternando superior e inferior. Cardio só no sábado. Domingo de mobilidade.',
+    comida: 'Come um pouco acima do gasto (peso × 35 kcal) para dar material ao músculo.' },
+  { id: 'emagrecimento', title: 'Emagrecimento', desc: 'Reduzir gordura corporal. Mais cardio, déficit calórico moderado.',
+    para: 'O principal é perder gordura e ver o peso e as medidas baixarem.',
+    semana: 'Cardio em 5 dias (terça, quarta, sexta, sábado e domingo), junto com força. Segunda e quinta são de força no superior.',
+    comida: 'Come um pouco abaixo do gasto (peso × 25 kcal), sem passar fome.' },
+  { id: 'recomposicao', title: 'Recomposição', desc: 'Trocar gordura por músculo mantendo o peso. Equilíbrio entre força e cardio.',
+    para: 'Está num peso bom, mas quer trocar gordura por músculo. A balança muda pouco, as medidas e o espelho mudam mais.',
+    semana: 'Força em 5 dias, com cardio na quarta, sexta e sábado. Domingo de mobilidade.',
+    comida: 'Come o quanto gasta (peso × 30 kcal), com bastante proteína.' },
+  { id: 'tonificacao', title: 'Tonificação', desc: 'Definir o corpo. Treino de força moderada + manutenção calórica.',
+    para: 'Quer o corpo mais durinho e definido, sem foco em ganhar volume nem em perder peso.',
+    semana: 'Força em 5 dias, com cardio na quarta, sexta e sábado. Domingo de mobilidade.',
+    comida: 'Come o quanto gasta (peso × 30 kcal), com bastante proteína.' }
 ];
+function goalDetalhes(g) {
+  return `<ul class="goal-card-specs">
+    <li><b>Pra quem:</b> ${g.para}</li>
+    <li><b>Na semana:</b> ${g.semana}</li>
+    <li><b>Na alimentação:</b> ${g.comida}</li>
+  </ul>`;
+}
+function renderProfileGoalInfo() {
+  const g = GOAL_TYPES.find(x => x.id === document.getElementById('prof-goal-type').value);
+  document.getElementById('prof-goal-info').innerHTML = g ? `<div class="goal-card-desc">${g.desc}</div>${goalDetalhes(g)}` : '';
+}
 
 // Exercise library (grouped, varied)
 const EX_LIBRARY = {
@@ -1225,6 +1254,7 @@ function renderGoalOptions() {
     <div class="goal-card${obSelectedGoal === g.id ? ' selected' : ''}" onclick="selectGoal('${g.id}')">
       <div class="goal-card-title">${g.title}</div>
       <div class="goal-card-desc">${g.desc}</div>
+      ${goalDetalhes(g)}
     </div>
   `).join('');
 }
@@ -2262,6 +2292,7 @@ function renderProfileTab() {
   document.getElementById('prof-age').value = p.age;
   document.getElementById('prof-height').value = p.height;
   document.getElementById('prof-goal-type').value = p.goal_type;
+  renderProfileGoalInfo();
   const set = new Set(p.food_dislikes || []);
   renderFoodPrefs(set, 'profile-foods-container', false);
 }
