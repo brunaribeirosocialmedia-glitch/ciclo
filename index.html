@@ -712,10 +712,9 @@
       <div class="input-group"><label>Altura (cm)</label><input type="number" id="prof-height" /></div>
       <div class="input-group"><label>Objetivo</label>
         <select id="prof-goal-type" onchange="renderProfileGoalInfo()">
-          <option value="recomposicao">Recomposição</option>
+          <option value="recomposicao">Definição (recomposição)</option>
           <option value="hipertrofia">Hipertrofia</option>
           <option value="emagrecimento">Emagrecimento</option>
-          <option value="tonificacao">Tonificação</option>
         </select>
         <div id="prof-goal-info" class="goal-info"></div>
       </div>
@@ -770,6 +769,10 @@ function updateCurrentProfile(updates) {
 
 // Migrate old data (versão antiga, sem perfis) if needed
 function migrateLegacyData() {
+  // "Tonificação" virou "Definição (recomposição)"
+  const perfis = getProfiles();
+  if (perfis.some(x => x.goal_type === 'tonificacao')) saveProfiles(perfis.map(x => x.goal_type === 'tonificacao' ? { ...x, goal_type: 'recomposicao' } : x));
+
   if (getProfiles().length > 0) return;
   const legacyCycle = localStorage.getItem('cycle_data');
   const legacyLog = localStorage.getItem('progress_log');
@@ -811,25 +814,26 @@ const FOOD_CATALOG = {
   gorduras: ['Castanha-do-pará','Castanha de caju','Amêndoa','Nozes','Pasta de amendoim','Azeite de oliva','Sementes de chia','Sementes de abóbora','Coco','Manteiga ghee','Óleo de coco','Linhaça','Gergelim','Pistache','Tahine','Macadâmia','Sementes de girassol']
 };
 
+// Baseado em ACSM (2009, progressão em treino resistido; 2009, perda de peso) e OMS (2020, atividade física).
+// "Tonificação" saiu: definir o corpo é ganhar músculo e reduzir gordura, ou seja, recomposição.
 // para: pra quem é · semana: como fica o treino · comida: ajuste de calorias (ver buildNutritionStats)
 const GOAL_TYPES = [
-  { id: 'hipertrofia', title: 'Hipertrofia', desc: 'Ganhar massa muscular. Mais carga, mais proteína, leve superávit calórico.',
-    para: 'Quer ganhar músculo e ver o corpo mais firme e com mais volume, e não se importa se o peso na balança subir um pouco.',
-    semana: 'Força quase todos os dias, alternando superior e inferior. Cardio só no sábado. Domingo de mobilidade.',
-    comida: 'Come um pouco acima do gasto (peso × 35 kcal) para dar material ao músculo.' },
-  { id: 'emagrecimento', title: 'Emagrecimento', desc: 'Reduzir gordura corporal. Mais cardio, déficit calórico moderado.',
+  { id: 'hipertrofia', title: 'Hipertrofia', desc: 'Ganhar massa muscular. Força com mais volume e leve superávit calórico.',
+    para: 'Quer ganhar músculo e ver o corpo com mais volume, e não se importa se o peso na balança subir um pouco.',
+    semana: 'Força quase todos os dias, alternando superior e inferior, com descanso de 1 a 2 min entre séries. Cardio leve no fim do treino, só pela saúde.',
+    comida: 'Come cerca de 10% acima do gasto (peso × 33 kcal). Superávit pequeno vira músculo; grande vira gordura.' },
+  { id: 'emagrecimento', title: 'Emagrecimento', desc: 'Reduzir gordura corporal. Mais cardio, déficit calórico moderado e força para não perder músculo.',
     para: 'O principal é perder gordura e ver o peso e as medidas baixarem.',
-    semana: 'Cardio em 5 dias (terça, quarta, sexta, sábado e domingo), junto com força. Segunda e quinta são de força no superior.',
-    comida: 'Come um pouco abaixo do gasto (peso × 25 kcal), sem passar fome.' },
-  { id: 'recomposicao', title: 'Recomposição', desc: 'Trocar gordura por músculo mantendo o peso. Equilíbrio entre força e cardio.',
-    para: 'Está num peso bom, mas quer trocar gordura por músculo. A balança muda pouco, as medidas e o espelho mudam mais.',
-    semana: 'Força em 5 dias, com cardio na quarta, sexta e sábado. Domingo de mobilidade.',
-    comida: 'Come o quanto gasta (peso × 30 kcal), com bastante proteína.' },
-  { id: 'tonificacao', title: 'Tonificação', desc: 'Definir o corpo. Treino de força moderada + manutenção calórica.',
-    para: 'Quer o corpo mais durinho e definido, sem foco em ganhar volume nem em perder peso.',
-    semana: 'Força em 5 dias, com cardio na quarta, sexta e sábado. Domingo de mobilidade.',
+    semana: 'Cardio em 5 dias, junto com força, com intervalos mais curtos (30 a 60 s). Força segue no plano para preservar o músculo enquanto o peso cai.',
+    comida: 'Come cerca de 15 a 20% abaixo do gasto (peso × 25 kcal), sem passar fome.' },
+  { id: 'recomposicao', title: 'Definição (recomposição)', desc: 'Trocar gordura por músculo mantendo o peso. É o que se costuma chamar de tonificar.',
+    para: 'Está num peso bom, mas quer o corpo mais firme e definido. A balança muda pouco; as medidas e o espelho mudam mais.',
+    semana: 'Força em 5 dias, com cardio na quarta, sexta e sábado e caminhada leve nos outros dias. Descanso de 60 a 90 s entre séries.',
     comida: 'Come o quanto gasta (peso × 30 kcal), com bastante proteína.' }
 ];
+// Cardio leve no fim dos dias sem cardio, para chegar perto dos 150 min por semana da OMS
+const CARDIO_EXTRA = { hipertrofia: '10 min de caminhada leve', recomposicao: '15 min de caminhada', emagrecimento: '20 min de caminhada' };
+const DESCANSO_SERIES = { hipertrofia: 'Descanso 1–2 min entre séries', emagrecimento: 'Descanso 30–60 s entre séries', recomposicao: 'Descanso 60–90 s entre séries' };
 function goalDetalhes(g) {
   return `<ul class="goal-card-specs">
     <li><b>Pra quem:</b> ${g.para}</li>
@@ -1748,6 +1752,10 @@ function generateTodayWorkout() {
 function rebuildWorkout() {
   const workout = generateTodayWorkout();
   treinoAtual = workout;
+  const temCardio = workout.exercises.some(e => EX_LIBRARY.cardio.some(c => c.name === e.name));
+  const extra = CARDIO_EXTRA[getCurrentProfile().goal_type] || CARDIO_EXTRA.recomposicao;
+  const cardioExtraHtml = (!temCardio && workout.intensity !== 'descanso')
+    ? `<div class="ex-tip-line" style="font-size:12px;margin-top:12px">🚶 Para fechar: ${extra}, no seu ritmo.</div>` : '';
   const feitoHoje = getWorkoutLog()[dataLocal()];
   const feitoHtml = feitoHoje
     ? `<div class="feito-box"><div class="feito-ok">✓ Treino de hoje registrado às ${feitoHoje.hora}</div><button class="link-btn" onclick="desfazerTreinoFeito()">Desfazer</button></div>`
@@ -1778,7 +1786,8 @@ function rebuildWorkout() {
         </li>`;
       }).join('')}
     </ul>
-    <p style="font-size:11px;color:var(--muted);margin-top:14px">Descanso 60–90s entre séries · Aquecimento 5min antes</p>
+    ${cardioExtraHtml}
+    <p style="font-size:11px;color:var(--muted);margin-top:14px">${DESCANSO_SERIES[getCurrentProfile().goal_type] || DESCANSO_SERIES.recomposicao} · Aquecimento 5min antes</p>
     ${feitoHtml}
   </div>`;
 
@@ -2035,7 +2044,7 @@ function buildNutritionStats() {
   const protein = Math.round(p.weight * 1.75);
   let cals;
   if (p.goal_type === 'emagrecimento') cals = Math.round(p.weight * 25);
-  else if (p.goal_type === 'hipertrofia') cals = Math.round(p.weight * 35);
+  else if (p.goal_type === 'hipertrofia') cals = Math.round(p.weight * 33);
   else cals = Math.round(p.weight * 30);
   document.getElementById('nutrition-stats').innerHTML = `
     <div class="stat"><div class="stat-label">Calorias/dia</div><div class="stat-value">${cals}<span class="stat-unit">kcal</span></div></div>
