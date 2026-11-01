@@ -1094,7 +1094,18 @@ const EX_EXTRA = {
 // Exercícios que ficam de fora enquanto o modo retomada está ligado
 const EX_DIFICIL = new Set(['Flexão diamante','Flexão declinada (pés no banco)','Flexão archer','Flexão fechada (mãos juntas)','Chin-up negativo','Pike push-up','Agachamento búlgaro','Hollow hold']);
 const EX_IMPACTO = new Set(['Agachamento com salto','Burpee','Pular corda (real ou simulada)','High knees']);
-const RETOMADA_SEMANAS = 8;
+// Duração pelo tempo parada; cada plano tem 3 fases de mesmo tamanho (ACSM: iniciante começa com 2–3 dias de força)
+//   fase 1: força 2x/semana, 2 séries, só leve · fase 2: força 3x/semana, leve · fase 3: força 4x/semana, até média
+const RETOMADA_OPCOES = [
+  { meses: 2,  rotulo: 'Menos de 3 meses', semanas: 4 },
+  { meses: 6,  rotulo: 'De 3 meses a 1 ano', semanas: 8 },
+  { meses: 24, rotulo: 'Mais de 1 ano', semanas: 12 }
+];
+const RETOMADA_FASES = {
+  1: { forca: 2, caminhada: '15min', texto: 'Força 2 vezes por semana (segunda e quinta), com 2 séries de cada exercício. Nos outros dias, caminhada e alongamento. O foco é criar o hábito e acordar o corpo.' },
+  2: { forca: 3, caminhada: '20min', texto: 'Força 3 vezes por semana (segunda, quarta e sexta), ainda leve. Caminhada e alongamento nos outros dias.' },
+  3: { forca: 4, caminhada: '25min', texto: 'Força 4 vezes por semana, alternando superior e inferior, já podendo chegar à intensidade média.' }
+};
 
 function dataLocal(d) {
   d = d || new Date();
@@ -1106,28 +1117,51 @@ function getRetomadaSemana() {
   const dias = Math.floor((new Date(dataLocal() + 'T12:00') - new Date(p.retomada.inicio + 'T12:00')) / 86400000);
   return Math.floor(Math.max(dias, 0) / 7) + 1;
 }
-function ligarRetomada() {
-  updateCurrentProfile({ retomada: { inicio: dataLocal() } });
+// { semana, total, fase (1–3), concluida } ou null se o modo estiver desligado
+function getRetomadaPlano() {
+  const semana = getRetomadaSemana();
+  if (semana === null) return null;
+  const meses = getCurrentProfile().retomada.meses_parada || 24;
+  const total = (RETOMADA_OPCOES.find(o => meses <= o.meses) || RETOMADA_OPCOES[2]).semanas;
+  const fase = semana <= total / 3 ? 1 : semana <= total * 2 / 3 ? 2 : 3;
+  return { semana, total, fase, concluida: semana > total };
+}
+// Na fase 1 todo exercício fica com 2 séries
+function seriesDe(ex) {
+  const txt = ex.sets[ex.usedIntensity] || ex.sets.medio;
+  const plano = getRetomadaPlano();
+  return plano && plano.fase === 1 && !plano.concluida ? txt.replace(/^\d+x/, '2x') : txt;
+}
+let retomadaEscolhendo = false;
+function ligarRetomada(meses) {
+  if (!meses) { retomadaEscolhendo = true; renderRetomadaStatus(); return; }
+  retomadaEscolhendo = false;
+  updateCurrentProfile({ retomada: { inicio: dataLocal(), meses_parada: meses } });
   rebuildWorkout();
+  buildWeek();
 }
 function desligarRetomada() {
   updateCurrentProfile({ retomada: null });
   rebuildWorkout();
+  buildWeek();
 }
 function renderRetomadaStatus() {
   const el = document.getElementById('retomada-status');
   if (!el) return;
-  const semana = getRetomadaSemana();
-  if (semana === null) {
-    el.innerHTML = `<button class="btn btn-outline" style="margin-bottom:10px;border-color:var(--accent3);color:var(--accent3)" onclick="ligarRetomada()">🌱 Estou voltando a treinar depois de um tempo parada</button>`;
+  const plano = getRetomadaPlano();
+  if (!plano) {
+    el.innerHTML = retomadaEscolhendo
+      ? `<div class="retomada-box"><strong>🌱 Há quanto tempo você está sem treinar?</strong><br>O plano começa leve e vai aumentando. Quanto mais tempo parada, mais longo ele fica.
+          <div style="display:grid;gap:8px;margin-top:10px">${RETOMADA_OPCOES.map(o => `<button class="btn btn-outline" style="border-color:var(--accent3);color:var(--accent3)" onclick="ligarRetomada(${o.meses})">${o.rotulo} · ${o.semanas} semanas</button>`).join('')}</div>
+          <button class="link-btn" style="margin-top:8px" onclick="retomadaEscolhendo=false;renderRetomadaStatus()">Cancelar</button></div>`
+      : `<button class="btn btn-outline" style="margin-bottom:10px;border-color:var(--accent3);color:var(--accent3)" onclick="ligarRetomada()">🌱 Estou voltando a treinar depois de um tempo parada</button>`;
     return;
   }
-  const fase = semana <= 4
-    ? 'Treinos leves, sem salto e sem os exercícios mais difíceis. O foco agora é criar o hábito e acordar o corpo.'
-    : semana <= RETOMADA_SEMANAS
-      ? 'Você já pode ir até a intensidade média. Saltos e exercícios avançados continuam de fora.'
-      : 'Você completou as 8 semanas de retomada. Se estiver se sentindo bem, pode desligar o modo e liberar o treino completo.';
-  el.innerHTML = `<div class="retomada-box"><strong>🌱 Modo retomada · semana ${Math.min(semana, RETOMADA_SEMANAS)} de ${RETOMADA_SEMANAS}</strong><br>${fase}<br><button class="link-btn" onclick="desligarRetomada()">Desligar modo retomada</button></div>`;
+  const texto = plano.concluida
+    ? `Você completou as ${plano.total} semanas de retomada. Se estiver se sentindo bem, desligue o modo para liberar o treino completo.`
+    : RETOMADA_FASES[plano.fase].texto;
+  const titulo = plano.concluida ? 'Retomada concluída 🎉' : `Modo retomada · semana ${plano.semana} de ${plano.total} · fase ${plano.fase} de 3`;
+  el.innerHTML = `<div class="retomada-box"><strong>🌱 ${titulo}</strong><br>${texto}<br><button class="link-btn" onclick="desligarRetomada()">Desligar modo retomada</button></div>`;
 }
 
 // ══════════════════════════════════════════════
@@ -1577,9 +1611,9 @@ function getEffectiveIntensity() {
     if (intensity === 'forte') intensity = 'medio';
     else if (intensity === 'medio') intensity = 'leve';
   }
-  const semana = getRetomadaSemana();
-  if (semana !== null) {
-    if (semana <= 4) intensity = 'leve';
+  const plano = getRetomadaPlano();
+  if (plano) {
+    if (plano.fase < 3 && !plano.concluida) intensity = 'leve';
     else if (intensity === 'forte') intensity = 'medio';
   }
   return intensity;
@@ -1619,35 +1653,19 @@ function pickFromGroup(group, count, rand) {
   }
   return result;
 }
-function generateTodayWorkout() {
-  const intensity = getEffectiveIntensity();
-  const rand = seededRandom(getDailySeed());
-
-  if (intensity === 'descanso') {
-    return {
-      title: 'Descanso total — escuta seu corpo',
-      desc: 'Hoje seu corpo está pedindo pausa. Sem culpa, sem exercício.',
-      exercises: [
-        { ...EX_LIBRARY.mobilidade[5], usedIntensity: 'leve' },
-        { ...EX_LIBRARY.mobilidade[1], usedIntensity: 'leve' }
-      ],
-      intensity: 'descanso'
-    };
-  }
-
-  if (intensity === 'mobilidade') {
-    const mob = pickFromGroup('mobilidade', 5, rand);
-    return {
-      title: 'Mobilidade e alongamento',
-      desc: 'Movimento suave pra ativar o corpo sem sobrecarga.',
-      exercises: mob.map(e => ({ ...e, usedIntensity: 'leve' })),
-      intensity: 'mobilidade'
-    };
-  }
-
-  // Determine focus based on day of week + goal type
+// Dias de força de cada fase da retomada (0 = domingo)
+const RETOMADA_DIAS = {
+  1: { 1: 'fullbodyleve', 4: 'fullbodyleve' },
+  2: { 1: 'fullbodyleve', 3: 'fullbodyleve', 5: 'fullbodyleve' },
+  3: { 1: 'superior', 2: 'inferior', 4: 'superiorcore', 5: 'inferiorcardio' }
+};
+function focoDoDia(dow) {
   const p = getCurrentProfile();
-  const dow = dayOfWeek();
+  const plano = getRetomadaPlano();
+  if (plano && !plano.concluida) {
+    if (dow === 0) return 'mobilidade';
+    return RETOMADA_DIAS[plano.fase][dow] || 'ativo';
+  }
   const goal = p.goal_type;
 
   // Pattern by day of week (rotates focus)
@@ -1679,11 +1697,63 @@ function generateTodayWorkout() {
     if (dow === 3) focus = 'superiorcore';
     if (dow === 5) focus = 'inferior';
   }
+  return focus;
+}
+const FOCO_ROTULO = { mobilidade: 'Mob', superior: 'Sup', inferior: 'Inf', cardiocore: 'Card', superiorcore: 'Sup+', inferiorcardio: 'Inf+', fullbody: 'Full', fullbodyleve: 'Força', ativo: 'Leve' };
+
+function generateTodayWorkout() {
+  const intensity = getEffectiveIntensity();
+  const rand = seededRandom(getDailySeed());
+
+  if (intensity === 'descanso') {
+    return {
+      title: 'Descanso total — escuta seu corpo',
+      desc: 'Hoje seu corpo está pedindo pausa. Sem culpa, sem exercício.',
+      exercises: [
+        { ...EX_LIBRARY.mobilidade[5], usedIntensity: 'leve' },
+        { ...EX_LIBRARY.mobilidade[1], usedIntensity: 'leve' }
+      ],
+      intensity: 'descanso'
+    };
+  }
+
+  if (intensity === 'mobilidade') {
+    const mob = pickFromGroup('mobilidade', 5, rand);
+    return {
+      title: 'Mobilidade e alongamento',
+      desc: 'Movimento suave pra ativar o corpo sem sobrecarga.',
+      exercises: mob.map(e => ({ ...e, usedIntensity: 'leve' })),
+      intensity: 'mobilidade'
+    };
+  }
+
+  const p = getCurrentProfile();
+  const plano = getRetomadaPlano();
+  const focus = focoDoDia(dayOfWeek());
 
   let exercises = [];
   let title, desc;
 
-  if (focus === 'mobilidade') {
+  if (focus === 'fullbodyleve') {
+    exercises = [
+      ...pickFromGroup('quadriceps', 1, rand),
+      ...pickFromGroup('peito', 1, rand),
+      ...pickFromGroup('gluteo', 1, rand),
+      ...pickFromGroup('costas', 1, rand),
+      ...(plano.fase >= 2 ? pickFromGroup('core', 1, rand) : [])
+    ];
+    title = 'Força leve, corpo todo';
+    desc = 'Poucos exercícios, movimento bem feito. Pare se sentir dor na articulação.';
+  } else if (focus === 'ativo') {
+    const caminhada = EX_LIBRARY.cardio.find(e => e.name === 'Caminhada rápida');
+    const tempo = RETOMADA_FASES[plano.fase].caminhada;
+    exercises = [
+      { ...caminhada, sets: { leve: tempo, medio: tempo, forte: tempo }, tip: 'Num ritmo em que dá pra conversar' },
+      ...pickFromGroup('mobilidade', 3, rand)
+    ];
+    title = 'Dia leve: caminhada e alongamento';
+    desc = 'Dia de recuperação ativa. O corpo se adapta no descanso.';
+  } else if (focus === 'mobilidade') {
     exercises = pickFromGroup('mobilidade', 5, rand);
     title = 'Mobilidade ativa';
     desc = 'Domingo de recuperação ativa. Move sem cansar.';
@@ -1754,7 +1824,7 @@ function rebuildWorkout() {
   treinoAtual = workout;
   const temCardio = workout.exercises.some(e => EX_LIBRARY.cardio.some(c => c.name === e.name));
   const extra = CARDIO_EXTRA[getCurrentProfile().goal_type] || CARDIO_EXTRA.recomposicao;
-  const cardioExtraHtml = (!temCardio && workout.intensity !== 'descanso')
+  const cardioExtraHtml = (!temCardio && workout.intensity !== 'descanso' && workout.intensity !== 'mobilidade')
     ? `<div class="ex-tip-line" style="font-size:12px;margin-top:12px">🚶 Para fechar: ${extra}, no seu ritmo.</div>` : '';
   const feitoHoje = getWorkoutLog()[dataLocal()];
   const feitoHtml = feitoHoje
@@ -1778,7 +1848,7 @@ function rebuildWorkout() {
               <div class="ex-icon">${ex.icon}</div>
               <div><div class="ex-name">${ex.name}</div><div class="ex-muscle">${ex.muscle}</div></div>
             </div>
-            <div class="ex-sets">${ex.sets[ex.usedIntensity] || ex.sets.medio}</div>
+            <div class="ex-sets">${seriesDe(ex)}</div>
           </div>
           ${extra.desc ? `<p class="ex-desc">${extra.desc}</p>` : ''}
           ${extra.mistake ? `<div class="ex-mistake">⚠️ ${extra.mistake}</div>` : ''}
@@ -1807,7 +1877,7 @@ function buildTodayCard(workout) {
     <li class="ex-item">
       <div class="ex-info"><div class="ex-icon">${ex.icon}</div>
       <div><div class="ex-name">${ex.name}</div><div class="ex-muscle">${ex.muscle}</div></div></div>
-      <div class="ex-sets">${ex.sets[ex.usedIntensity] || ex.sets.medio}</div>
+      <div class="ex-sets">${seriesDe(ex)}</div>
     </li>`).join('');
   if (workout.exercises.length > 4) {
     list.innerHTML += `<li style="padding:8px 0;font-size:11px;color:var(--muted)">+ ${workout.exercises.length-4} exercícios na aba Treino</li>`;
@@ -2001,7 +2071,7 @@ function buildWeek() {
   const grid = document.getElementById('week-grid');
   const today = new Date().getDay();
   const labels = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  const types = ['Mob','Sup','Inf','Card','Sup+','Inf+','Full'];
+  const types = [0,1,2,3,4,5,6].map(d => FOCO_ROTULO[focoDoDia(d)] || '');
   const log = getWorkoutLog();
   const seg = inicioDaSemana(new Date());
   grid.innerHTML = '';
