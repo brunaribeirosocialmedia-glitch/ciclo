@@ -339,7 +339,7 @@
     <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--muted)">
       Não tem conta? <span style="color:var(--accent);cursor:pointer;font-weight:600" onclick="toggleAuthMode()">Criar conta</span>
     </div>
-    <p class="auth-footer">Seus dados ficam salvos no seu dispositivo. O login garante que só você acessa o app.</p>
+    <p class="auth-footer">Seus dados ficam salvos na sua conta e aparecem iguais no celular e no computador. Só você vê.</p>
   </div>
 </div>
 
@@ -733,6 +733,7 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 // ══════════════════════════════════════════════
 // STORAGE (multi-profile)
@@ -745,6 +746,7 @@ function getProfiles() {
 }
 function saveProfiles(arr) {
   localStorage.setItem(ST_PROFILES, JSON.stringify(arr));
+  agendarEnvioNuvem();
 }
 function getCurrentProfileId() {
   return localStorage.getItem(ST_CURRENT);
@@ -752,6 +754,7 @@ function getCurrentProfileId() {
 function setCurrentProfileId(id) {
   if (id === null) localStorage.removeItem(ST_CURRENT);
   else localStorage.setItem(ST_CURRENT, id);
+  agendarEnvioNuvem();
 }
 function getCurrentProfile() {
   const id = getCurrentProfileId();
@@ -1479,12 +1482,13 @@ function showApp() {
   document.getElementById('app').classList.add('active');
   buildEverything();
 }
-function logout() {
-  setCurrentProfileId(null);
-  localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem(AUTH_EMAIL_KEY);
+async function logout() {
   document.getElementById('header-menu').classList.remove('open');
-  showLanding(getProfiles());
+  await enviarNuvem();
+  await sb.auth.signOut();
+  limparDadosLocais();
+  document.getElementById('app').classList.remove('active');
+  showAuthGate();
 }
 function switchProfile() {
   setCurrentProfileId(null);
@@ -2424,12 +2428,93 @@ function buildEverything() {
 }
 
 // ══════════════════════════════════════════════
-// AUTH (GoTrue / Netlify Identity direct API)
+// CONTA E SINCRONIZAÇÃO (Supabase, tabela ciclo_dados do projeto Baluarte)
 // ══════════════════════════════════════════════
-const GOTRUE = '/.netlify/identity';
-const AUTH_TOKEN_KEY = 'ciclo_auth_token';
-const AUTH_EMAIL_KEY = 'ciclo_auth_email';
+// Uma linha por pessoa, com { profiles, current }. A RLS garante que cada uma só lê a própria.
+// O aparelho guarda uma cópia local; a nuvem vence ao entrar e ao voltar para o app.
+const SB_URL = 'https://kfcmcwxnqfofmworbojt.supabase.co';
+const SB_CHAVE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmY21jd3hucWZvZm13b3Jib2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyODUyMzIsImV4cCI6MjEwNTg2MTIzMn0.GOpUmWdtFIeUE-JULWL4-5lOktBCMvrWjQ_j46KKXkA'; // chave pública (anon): feita para ficar no navegador
+const sb = window.supabase.createClient(SB_URL, SB_CHAVE, { auth: { persistSession: true, storageKey: 'ciclo_sessao' } });
+const ST_DONO = 'ciclo_dono';           // de qual conta são os dados deste aparelho
+const ST_PENDENTE = 'ciclo_pendente';   // tem mudança que ainda não subiu
+const ST_VERSAO = 'ciclo_versao_nuvem'; // atualizado_em da última versão aplicada
 let _authMode = 'login';
+let usuarioAtual = null;
+let timerEnvio = null;
+
+function limparDadosLocais() {
+  [ST_PROFILES, ST_CURRENT, ST_DONO, ST_PENDENTE, ST_VERSAO].forEach(k => localStorage.removeItem(k));
+}
+function agendarEnvioNuvem() {
+  if (!usuarioAtual) return;
+  localStorage.setItem(ST_PENDENTE, '1');
+  clearTimeout(timerEnvio);
+  timerEnvio = setTimeout(enviarNuvem, 800);
+}
+async function enviarNuvem() {
+  clearTimeout(timerEnvio);
+  if (!usuarioAtual || !localStorage.getItem(ST_PENDENTE)) return;
+  const dados = { profiles: getProfiles(), current: getCurrentProfileId() };
+  const { data, error } = await sb.from('ciclo_dados')
+    .upsert({ usuario_id: usuarioAtual.id, dados }).select('atualizado_em').single();
+  if (error) { console.warn('[Ciclo] não sincronizou, tenta de novo depois', error.message); return; }
+  localStorage.removeItem(ST_PENDENTE);
+  localStorage.setItem(ST_VERSAO, data.atualizado_em);
+}
+// Traz a versão da nuvem. Devolve true se algo mudou neste aparelho.
+async function puxarNuvem() {
+  if (!usuarioAtual) return false;
+  if (localStorage.getItem(ST_PENDENTE)) { await enviarNuvem(); return false; }
+  const { data, error } = await sb.from('ciclo_dados').select('dados, atualizado_em').maybeSingle();
+  if (error) { console.warn('[Ciclo] sem conexão com a nuvem', error.message); return false; }
+  if (!data) return false;
+  if (data.atualizado_em === localStorage.getItem(ST_VERSAO)) return false;
+  const perfis = data.dados.profiles || [];
+  localStorage.setItem(ST_PROFILES, JSON.stringify(perfis));
+  const atual = getCurrentProfileId() || data.dados.current;
+  if (atual && perfis.some(p => p.id === atual)) localStorage.setItem(ST_CURRENT, atual);
+  else if (perfis.length) localStorage.setItem(ST_CURRENT, perfis[0].id);
+  else localStorage.removeItem(ST_CURRENT);
+  localStorage.setItem(ST_VERSAO, data.atualizado_em);
+  return true;
+}
+// Primeira entrada neste aparelho: junta o que já estava salvo aqui (sem dono) com a conta
+async function entrarNaConta(usuario) {
+  usuarioAtual = usuario;
+  const dono = localStorage.getItem(ST_DONO);
+  if (dono && dono !== usuario.id) limparDadosLocais();
+  const locais = dono === usuario.id ? [] : getProfiles();
+  localStorage.setItem(ST_DONO, usuario.id);
+  localStorage.removeItem(ST_PENDENTE);
+  localStorage.removeItem(ST_VERSAO);
+  const { data } = await sb.from('ciclo_dados').select('dados, atualizado_em').maybeSingle();
+  const daNuvem = (data && data.dados.profiles) || [];
+  const novos = locais.filter(p => !daNuvem.some(n => n.id === p.id));
+  if (data) {
+    localStorage.setItem(ST_PROFILES, JSON.stringify(daNuvem));
+    localStorage.setItem(ST_VERSAO, data.atualizado_em);
+    const atual = data.dados.current;
+    if (atual && daNuvem.some(p => p.id === atual)) localStorage.setItem(ST_CURRENT, atual);
+    else localStorage.removeItem(ST_CURRENT);
+  }
+  if (novos.length || !data) {
+    const todos = [...daNuvem, ...novos];
+    localStorage.setItem(ST_PROFILES, JSON.stringify(todos));
+    if (!getCurrentProfileId() && todos.length) localStorage.setItem(ST_CURRENT, todos[0].id);
+    localStorage.setItem(ST_PENDENTE, '1');
+    await enviarNuvem();
+  }
+}
+// Ao voltar para o app (trocou de aba, desbloqueou o celular), busca o que mudou no outro aparelho
+async function sincronizarAoVoltar() {
+  if (document.visibilityState !== 'visible' || !usuarioAtual) return;
+  if (await puxarNuvem()) init();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') enviarNuvem();
+  else sincronizarAoVoltar();
+});
+window.addEventListener('online', () => enviarNuvem());
 
 function showAuthGate() {
   document.getElementById('auth-gate').classList.add('open');
@@ -2453,6 +2538,15 @@ function setAuthError(msg) {
   el.textContent = msg;
   el.style.display = 'block';
 }
+function traduzirErro(msg) {
+  if (/invalid login credentials/i.test(msg)) return 'E-mail ou senha incorretos.';
+  if (/already registered|already exists/i.test(msg)) return 'Esse e-mail já tem conta. Toque em "Já tenho conta" e entre.';
+  if (/signups not allowed|signup.*disabled/i.test(msg)) return 'O cadastro ainda não está aberto. Fale com a Bruna.';
+  if (/email not confirmed/i.test(msg)) return 'Confirme seu e-mail antes de entrar.';
+  if (/valid email|invalid.*email/i.test(msg)) return 'Esse e-mail não parece válido.';
+  if (/failed to fetch|network/i.test(msg)) return 'Sem conexão. Confira a internet e tente de novo.';
+  return msg;
+}
 async function handleAuthSubmit() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
@@ -2463,43 +2557,31 @@ async function handleAuthSubmit() {
   btn.textContent = 'Carregando…';
   btn.disabled = true;
   try {
-    if (_authMode === 'signup') {
-      const sr = await fetch(`${GOTRUE}/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      if (!sr.ok) {
-        const e = await sr.json();
-        throw new Error(e.msg || 'Erro ao criar conta.');
-      }
-    }
-    const params = new URLSearchParams();
-    params.append('grant_type', 'password');
-    params.append('username', email);
-    params.append('password', password);
-    const lr = await fetch(`${GOTRUE}/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params
-    });
-    if (!lr.ok) {
-      const e = await lr.json();
-      throw new Error(e.error_description || 'E-mail ou senha incorretos.');
-    }
-    const data = await lr.json();
-    localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
-    localStorage.setItem(AUTH_EMAIL_KEY, email);
+    const { data, error } = _authMode === 'signup'
+      ? await sb.auth.signUp({ email, password })
+      : await sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (!data.session) throw new Error('Conta criada. Confirme seu e-mail para entrar.');
     window._oauthName = email.split('@')[0];
+    await entrarNaConta(data.session.user);
     hideAuthGate();
+    document.getElementById('auth-password').value = '';
     init();
   } catch (err) {
-    setAuthError(err.message);
-    btn.textContent = _authMode === 'login' ? 'Entrar' : 'Criar conta';
-    btn.disabled = false;
+    setAuthError(traduzirErro(err.message || String(err)));
   }
+  btn.textContent = _authMode === 'login' ? 'Entrar' : 'Criar conta';
+  btn.disabled = false;
 }
-document.addEventListener('DOMContentLoaded', init);
+async function iniciarApp() {
+  const { data } = await sb.auth.getSession();
+  if (!data.session) return showAuthGate();
+  usuarioAtual = data.session.user;
+  if (localStorage.getItem(ST_DONO) !== usuarioAtual.id) await entrarNaConta(usuarioAtual);
+  else await puxarNuvem();
+  init();
+}
+document.addEventListener('DOMContentLoaded', iniciarApp);
 </script>
 </body>
 </html>
