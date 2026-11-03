@@ -554,6 +554,7 @@
       Gerado especialmente pra você hoje. Considera sua fase do ciclo, objetivo, dor e o que você treinou nos últimos dias.
     </p>
     <div id="retomada-status"></div>
+    <label class="check-row" style="margin-bottom:10px"><input type="checkbox" id="pref-corda" onchange="alternarCorda(this.checked)"><span style="font-size:13px">🪢 Gosto de pular corda: incluir nos treinos</span></label>
     <button class="btn btn-outline" onclick="regenerateWorkout()" style="margin-bottom:14px">↻ Gerar outro treino</button>
   </div>
   <div id="phase-mod-treino"></div>
@@ -1074,7 +1075,7 @@ const EX_EXTRA = {
   'Agachamento com salto':            { desc:'Agache e exploda para cima com os braços. Aterrisse suave com joelhos flexionados.',                                 mistake:'Aterrissar com os joelhos travados — impacto direto na articulação' },
   'Mountain climbers':                { desc:'Em posição de flexão, joelhos alternam em direção ao peito em ritmo rápido.',                                       mistake:'Quadril muito alto — vira caminhada, perde o trabalho de core' },
   'High knees':                       { desc:'Corrida no lugar com joelhos subindo até a altura do quadril. Braços em sincronia.',                                 mistake:'Não elevar o joelho — perde o trabalho cardio e de flexores' },
-  'Pular corda (real ou simulada)':   { desc:'Pulos pequenos na ponta dos pés, punhos girando. Simulado: imite o movimento dos braços.',                           mistake:'Pulos muito altos — gasta energia à toa e cansa mais rápido' },
+  'Pular corda (real ou simulada)':   { desc:'Pulos baixinhos na ponta dos pés, joelhos levemente dobrados, punhos girando a corda. Prefira tênis e piso que amorteça. Se o joelho doer, faça a versão simulada: gire os braços e marche no lugar.', mistake:'Pular alto ou cair com o calcanhar. O impacto vai direto para o joelho' },
   'Caminhada rápida':                 { desc:'Ritmo que dificulta manter conversa. Braços dobrados a 90° se balançando.',                                        mistake:'Arrastar os pés ou dar passadas muito curtas' },
   'Saudação ao sol':                  { desc:'Sequência fluida: de pé → mãos no chão → prancha → cobra → cachorro → de pé. Respire em cada transição.',           mistake:'Apressar a sequência sem sincronizar com a respiração' },
   'Postura da criança':               { desc:'Ajoelhada com bacia sobre o calcanhar, braços estendidos à frente. Bacia afunda com a expiração.',                  mistake:'Tensionar os ombros — deixe-os cair naturalmente' },
@@ -1133,7 +1134,7 @@ function getRetomadaPlano() {
 function seriesDe(ex) {
   const txt = ex.sets[ex.usedIntensity] || ex.sets.medio;
   const plano = getRetomadaPlano();
-  return plano && plano.fase === 1 && !plano.concluida ? txt.replace(/^\d+x/, '2x') : txt;
+  return plano && plano.fase === 1 && !plano.concluida && ex.name !== CORDA_ROTULO ? txt.replace(/^\d+x/, '2x') : txt;
 }
 let retomadaEscolhendo = false;
 function ligarRetomada(meses) {
@@ -1646,16 +1647,42 @@ function seededRandom(seed) {
 }
 function pickFromGroup(group, count, rand) {
   let arr = [...EX_LIBRARY[group]];
-  if (getRetomadaSemana() !== null) arr = arr.filter(e => !EX_DIFICIL.has(e.name) && !EX_IMPACTO.has(e.name));
+  const planoR = getRetomadaPlano();
+  if (planoR) {
+    // Retomada concluída: quem gosta de corda volta a tê-la nos dias de cardio
+    const cordaLiberada = planoR.concluida && gostaDeCorda();
+    arr = arr.filter(e => !EX_DIFICIL.has(e.name) && (!EX_IMPACTO.has(e.name) || (cordaLiberada && e.name === CORDA_ROTULO)));
+  }
   const recentes = exerciciosRecentes();
   const novos = arr.filter(e => !recentes.has(e.name));
   if (novos.length >= count) arr = novos;
+  const corda = arr.find(e => e.name === CORDA_ROTULO);
+  if (group === 'cardio' && corda && gostaDeCorda() && count > 0) {
+    arr = arr.filter(e => e !== corda);
+    return [corda, ...pickFromGroupLista(arr, count - 1, rand)];
+  }
+  return pickFromGroupLista(arr, count, rand);
+}
+function pickFromGroupLista(arr, count, rand) {
   const result = [];
   for (let i = 0; i < count && arr.length; i++) {
     const idx = Math.floor(rand() * arr.length);
     result.push(arr.splice(idx, 1)[0]);
   }
   return result;
+}
+// Quem marca "gosto de pular corda": dias leves que viram dia de corda em cada fase da retomada
+const CORDA_ROTULO = 'Pular corda (real ou simulada)';
+const CORDA_DIAS = { 1: [3, 6], 2: [2, 6], 3: [3, 6] };
+const CORDA_SERIES = { 1: '6x 20s', 2: '8x 30s', 3: '8x 45s' };
+function gostaDeCorda() {
+  const p = getCurrentProfile();
+  return !!(p && p.gosta_corda);
+}
+function alternarCorda(ligado) {
+  updateCurrentProfile({ gosta_corda: ligado });
+  rebuildWorkout();
+  buildWeek();
 }
 // Dias de força de cada fase da retomada (0 = domingo)
 const RETOMADA_DIAS = {
@@ -1668,7 +1695,9 @@ function focoDoDia(dow) {
   const plano = getRetomadaPlano();
   if (plano && !plano.concluida) {
     if (dow === 0) return 'mobilidade';
-    return RETOMADA_DIAS[plano.fase][dow] || 'ativo';
+    const foco = RETOMADA_DIAS[plano.fase][dow] || 'ativo';
+    if (foco === 'ativo' && gostaDeCorda() && CORDA_DIAS[plano.fase].includes(dow)) return 'corda';
+    return foco;
   }
   const goal = p.goal_type;
 
@@ -1703,7 +1732,7 @@ function focoDoDia(dow) {
   }
   return focus;
 }
-const FOCO_ROTULO = { mobilidade: 'Mob', superior: 'Sup', inferior: 'Inf', cardiocore: 'Card', superiorcore: 'Sup+', inferiorcardio: 'Inf+', fullbody: 'Full', fullbodyleve: 'Força', ativo: 'Leve' };
+const FOCO_ROTULO = { mobilidade: 'Mob', superior: 'Sup', inferior: 'Inf', cardiocore: 'Card', superiorcore: 'Sup+', inferiorcardio: 'Inf+', fullbody: 'Full', fullbodyleve: 'Força', ativo: 'Leve', corda: 'Corda' };
 
 function generateTodayWorkout() {
   const intensity = getEffectiveIntensity();
@@ -1748,6 +1777,19 @@ function generateTodayWorkout() {
     ];
     title = 'Força leve, corpo todo';
     desc = 'Poucos exercícios, movimento bem feito. Pare se sentir dor na articulação.';
+  } else if (focus === 'corda') {
+    const marcha = EX_LIBRARY.cardio.find(e => e.name === 'Marcha no lugar');
+    const corda = EX_LIBRARY.cardio.find(e => e.name === CORDA_ROTULO);
+    const series = CORDA_SERIES[plano.fase];
+    const panturrilha = EX_LIBRARY.panturrilha[0];
+    exercises = [
+      { ...marcha, sets: { leve: '3min', medio: '3min', forte: '3min' }, tip: 'Aquecimento antes da corda' },
+      { ...corda, sets: { leve: series, medio: series, forte: series }, tip: 'Descanse o dobro do tempo do pulo entre as séries' },
+      { ...panturrilha, tip: 'Fortalece a panturrilha, que segura o impacto do pulo' },
+      ...pickFromGroup('mobilidade', 2, rand)
+    ];
+    title = 'Dia de corda';
+    desc = 'Corda em blocos curtos, com descanso entre eles. Pare se o joelho reclamar e troque pela versão simulada.';
   } else if (focus === 'ativo') {
     const caminhada = EX_LIBRARY.cardio.find(e => e.name === 'Caminhada rápida');
     const tempo = RETOMADA_FASES[plano.fase].caminhada;
@@ -1867,6 +1909,8 @@ function rebuildWorkout() {
 
   renderRetomadaStatus();
   renderWorkoutHistory();
+  const prefCorda = document.getElementById('pref-corda');
+  if (prefCorda) prefCorda.checked = gostaDeCorda();
 
   // Also update today card on dashboard
   buildTodayCard(workout);
