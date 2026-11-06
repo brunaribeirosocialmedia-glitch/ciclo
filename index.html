@@ -2471,7 +2471,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && !l
 // A nuvem decide quando avisar: função ciclo-lua-avisos, no Supabase do Baluarte.
 // ══════════════════════════════════════════════
 const VAPID_PUBLICA = 'BFYZdKlm22te1NSKgMw71IP4VU9JCC3-x_2vC8k6MNzV6Xgpc2Co1rfQuhxZYTGji3kq7rWyU5ARntUMC2zsLP0';
-const ST_AVISOS = 'ciclo_avisos_ativos';
+const ST_AVISOS = 'ciclo_avisos_ativos'; // endereço deste aparelho na nuvem
 const TIPOS_AVISO = [
   { id: 'agua', nome: '💧 Água', quando: '10h30 e 16h, se os copos estiverem atrasados' },
   { id: 'comida', nome: '🍽️ Comida', quando: '12h30 e 20h' },
@@ -2510,7 +2510,7 @@ async function ligarAvisos() {
     const inscricao = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chaveParaBytes(VAPID_PUBLICA) });
     const { error } = await salvarAparelho(inscricao);
     if (error) { await inscricao.unsubscribe(); throw error; }
-    localStorage.setItem(ST_AVISOS, '1');
+    localStorage.setItem(ST_AVISOS, inscricao.endpoint);
     avisosMensagem = 'Avisos ligados! Toque em "Testar" para ver como chegam.';
   } catch (e) {
     console.warn('[Ciclo] avisos', e);
@@ -2523,10 +2523,9 @@ async function desligarAvisos() {
   avisosMensagem = '';
   try {
     const inscricao = await inscricaoAtual();
-    if (inscricao) {
-      await sb.from('ciclo_push_aparelhos').delete().eq('endpoint', inscricao.endpoint);
-      await inscricao.unsubscribe();
-    }
+    const endereco = (inscricao && inscricao.endpoint) || localStorage.getItem(ST_AVISOS);
+    if (endereco) await sb.from('ciclo_push_aparelhos').delete().eq('endpoint', endereco);
+    if (inscricao) await inscricao.unsubscribe();
   } catch (e) { console.warn('[Ciclo] avisos', e); }
   localStorage.removeItem(ST_AVISOS);
   renderAvisos();
@@ -2537,9 +2536,10 @@ async function testarAviso() {
   renderAvisos();
   const { data, error } = await sb.functions.invoke('ciclo-lua-avisos', { body: { teste: true } });
   if (error) console.warn('[Ciclo] teste', error);
+  const detalhe = (data && data.erros && data.erros[0]) || (error && error.message) || (data && data.erro) || '';
   avisosMensagem = !error && data && data.entregues
     ? 'Enviado! Deve chegar em alguns segundos. Se o app estiver aberto, feche para ver.'
-    : 'O aviso de teste não foi entregue. Me conta que eu olho o que houve.';
+    : 'O aviso de teste não foi entregue. ' + detalhe;
   renderAvisos();
 }
 function alternarAviso(tipo, ligado) {
@@ -2577,14 +2577,15 @@ async function renderAvisos() {
     return;
   }
   const inscricao = await inscricaoAtual();
-  if (!inscricao) {
-    localStorage.removeItem(ST_AVISOS);
+  if (!inscricao && !localStorage.getItem(ST_AVISOS)) {
     el.innerHTML = `<p class="avisos-texto">${nome} te avisa de água, comida, treino e hora de dormir, mesmo com o app fechado. No máximo 5 por dia, e só o que você ainda não marcou.</p>
       <button class="btn btn-sm" onclick="ligarAvisos()">🔔 Ligar avisos</button>${msg}`;
     return;
   }
-  localStorage.setItem(ST_AVISOS, '1');
-  if (usuarioAtual) salvarAparelho(inscricao).catch(() => {});
+  if (inscricao) {
+    localStorage.setItem(ST_AVISOS, inscricao.endpoint);
+    if (usuarioAtual) salvarAparelho(inscricao).then(null, () => {});
+  }
   const preferencias = dadosLua(p).avisos;
   el.innerHTML = `<p class="avisos-texto">Avisos ligados neste aparelho. No máximo 5 por dia, e só o que você ainda não marcou.</p>
     ${TIPOS_AVISO.map(t => `<label class="aviso-tipo"><input type="checkbox" ${preferencias[t.id] !== false ? 'checked' : ''} onchange="alternarAviso('${t.id}',this.checked)"><span><strong>${t.nome}</strong><small>${t.quando}</small></span></label>`).join('')}
