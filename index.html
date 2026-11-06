@@ -287,6 +287,35 @@
   .ex-mistake { font-size: 11px; color: var(--accent4); background: rgba(251,146,60,.1); border-left: 2px solid var(--accent4); padding: 5px 10px; border-radius: 0 6px 6px 0; margin-bottom: 4px; }
   .ex-tip-line { font-size: 10px; color: var(--accent3); margin-top: 4px; }
 
+  /* ── MASCOTE LUA ── */
+  .lua-card { padding: 14px; }
+  .lua-topo { display: flex; align-items: flex-start; gap: 10px; }
+  .lua-bicho { flex-shrink: 0; width: 104px; height: 104px; padding: 0; background: none; border: 0; cursor: pointer; animation: lua-flutuar 3.4s ease-in-out infinite; -webkit-tap-highlight-color: transparent; }
+  .lua-bicho:active { transform: scale(.93); }
+  .lua-bicho svg { display: block; overflow: visible; }
+  .lua-bicho.estado-sono { animation-duration: 6s; }
+  .lua-gota { animation: lua-pingar 1.6s ease-in infinite; }
+  .lua-olhos { transform-origin: 60px 58px; animation: lua-piscar 5s infinite; }
+  .lua-balao { position: relative; flex: 1; min-width: 0; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; }
+  .lua-balao::before { content: ''; position: absolute; left: -7px; top: 28px; width: 12px; height: 12px; background: var(--surface2); border-left: 1px solid var(--border); border-bottom: 1px solid var(--border); transform: rotate(45deg); }
+  .lua-nome { display: flex; align-items: center; gap: 2px; font-size: 11px; font-weight: 700; color: var(--accent); }
+  .lua-renomear { background: none; border: 0; padding: 2px 4px; font-size: 10px; cursor: pointer; opacity: .6; }
+  .lua-balao p { font-size: 14px; line-height: 1.4; margin-top: 2px; }
+  .lua-acoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .lua-btn, .lua-btn-suave { min-height: 36px; padding: 7px 12px; border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .lua-btn { background: var(--accent); color: #1a1a24; border: 1px solid var(--accent); }
+  .lua-btn-suave { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .lua-agua { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .lua-agua-texto { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .lua-agua-texto strong { color: var(--text); }
+  .lua-copos { display: grid; grid-template-columns: repeat(10, 1fr); margin-top: 4px; }
+  .lua-copo { height: 36px; padding: 0; background: none; border: 0; font-size: 18px; line-height: 1; cursor: pointer; filter: grayscale(1); opacity: .28; }
+  .lua-copo.cheio { filter: none; opacity: 1; }
+  @keyframes lua-flutuar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  @keyframes lua-pingar { 0% { transform: translateY(-3px); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(9px); opacity: 0; } }
+  @keyframes lua-piscar { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+  @media (prefers-reduced-motion: reduce) { .lua-bicho, .lua-gota, .lua-olhos { animation: none; } }
+
   /* ── RETOMADA E HISTÓRICO ── */
   .retomada-box { background: #0f3727; border: 1px solid var(--accent3); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.5; color: var(--text); }
   .retomada-box strong { color: var(--accent3); }
@@ -509,6 +538,7 @@
 
 <!-- DASHBOARD -->
 <div id="tab-dashboard" class="tab active">
+  <div id="mascote-lua"></div>
   <div id="phase-banner-dash"></div>
   <div id="pain-adapt-dash"></div>
 
@@ -2003,6 +2033,7 @@ function buildTodayCard(workout) {
     list.innerHTML += `<li style="padding:8px 0;font-size:11px;color:var(--muted)">+ ${workout.exercises.length-4} exercícios na aba Treino</li>`;
   }
   document.getElementById('today-workout-note').textContent = workout.desc;
+  renderMascote();
 }
 
 // ══════════════════════════════════════════════
@@ -2204,6 +2235,210 @@ function buildWeek() {
     grid.appendChild(div);
   }
 }
+
+// ══════════════════════════════════════════════
+// MASCOTE: LUA
+// Fala uma coisa de cada vez, conforme a hora e o que já foi marcado hoje. Nunca dá bronca.
+// ══════════════════════════════════════════════
+const AGUA_META_COPOS = 10; // copos de 250 ml = 2,5 L
+const ADIAR_MS = 60 * 60 * 1000;
+const LUA_REFEICOES = [
+  { chave: 'cafe', de: 7, ate: 10, fala: 'Bom dia! Minha barriga já acordou. Já tomou café da manhã?' },
+  { chave: 'almoco', de: 12, ate: 14.5, fala: 'Minha barriga roncou! Já almoçou?' },
+  { chave: 'lanche', de: 16, ate: 17.5, fala: 'Hora de um lanchinho, né? Fiquei com fome só de olhar o relógio.' },
+  { chave: 'jantar', de: 19, ate: 21, fala: 'Já jantou? Eu janto luz de estrela, mas você precisa de comida de verdade.' }
+];
+const LUA_POR_FASE = {
+  menstrual: { estado: 'dengosa', falas: ['Hoje é dia de pegar leve. Coberta e chazinho contam como autocuidado.', 'Seu corpo está trabalhando muito. Vamos com calma hoje.'] },
+  folicular: { estado: 'feliz', falas: ['Tô sentindo uma energia boa hoje. E você?', 'Dia bom para começar alguma coisa nova!'] },
+  ovulatoria: { estado: 'orgulhosa', falas: ['Hoje a gente está brilhando mais que eu em noite de lua cheia!', 'Tá sentindo essa força toda? Eu tô!'] },
+  lutea: { estado: 'dengosa', falas: ['Se bater irritação ou vontade de doce, é normal nessa fase. Tô com você.', 'Dia de ir no seu ritmo. Sem cobrança.'] }
+};
+const LUA_CARINHOS = ['Hihi, faz cócega!', 'Oi! Que bom te ver.', 'Tô aqui, tá?', 'Você tá indo muito bem.', 'Mais um carinho e eu viro lua cheia!'];
+let luaReacao = null;
+let luaReacaoTimer = null;
+
+function dadosLua(p) {
+  const m = p.mascote || {};
+  return { nome: m.nome || 'Lua', agua: m.agua || {}, feitos: m.feitos || {}, adiados: m.adiados || {} };
+}
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+// Quantos copos já deveriam ter sido tomados nesta hora (das 7h30 às 21h)
+function coposEsperados(h) {
+  if (h < 7.5) return 0;
+  if (h >= 21) return AGUA_META_COPOS;
+  return Math.round((h - 7.5) / 13.5 * AGUA_META_COPOS);
+}
+// O que a Lua diz agora: a primeira coisa da lista que ainda faz sentido
+function pedidoDaLua(p, agora) {
+  agora = agora || new Date();
+  const hoje = dataLocal(agora);
+  const h = agora.getHours() + agora.getMinutes() / 60;
+  const m = dadosLua(p);
+  const feitosHoje = m.feitos[hoje] || {};
+  const livre = chave => !feitosHoje[chave] && !(m.adiados[chave] > agora.getTime());
+  const copos = m.agua[hoje] || 0;
+  const treinou = !!(p.workout_log && p.workout_log[hoje]);
+  const dor = p.pain_log ? p.pain_log[todayKey()] : null;
+  const humor = p.mood_log ? p.mood_log[todayKey()] : null;
+  const treino = treinoAtual || generateTodayWorkout();
+  const acoesDispensar = [{ rotulo: 'Agora não', acao: 'adiar' }];
+
+  if (dor >= 5 && livre('cuidado')) return { chave: 'cuidado', estado: 'dengosa', fala: 'Você marcou dor hoje, né? Fica sossegada. Bolsa quente, descanso e treino só se o corpo pedir.', acoes: [{ rotulo: 'Obrigada, Lua', acao: 'feito' }] };
+  if (humor === 'triste' && livre('cuidado')) return { chave: 'cuidado', estado: 'dengosa', fala: 'Dia difícil? Não precisa dar conta de tudo hoje. Fico aqui do seu lado.', acoes: [{ rotulo: 'Obrigada, Lua', acao: 'feito' }] };
+  if (humor === 'cansada' && livre('cuidado')) return { chave: 'cuidado', estado: 'sono', fala: 'Cansadinha hoje? Vai no seu ritmo. Até um treino pequeno já vale.', acoes: [{ rotulo: 'Obrigada, Lua', acao: 'feito' }] };
+
+  if ((h >= 22.5 || h < 5) && livre('dormir')) return { chave: 'dormir', estado: 'sono', fala: treinou ? 'Tô com sono… Que dia bom a gente teve. Vamos dormir?' : 'Tô com sono… Amanhã tem mais. Vamos dormir?', acoes: [{ rotulo: 'Boa noite, Lua', acao: 'feito' }] };
+
+  const atraso = coposEsperados(h) - copos;
+  if (h >= 7.5 && h < 22.5 && atraso >= 2 && copos < AGUA_META_COPOS && livre('sede')) {
+    return { chave: 'sede', estado: 'sede', fala: atraso >= 4 ? 'Socorro, tô secando! Toma um copo de água comigo?' : 'Tô com sede! Vamos tomar um copo de água?', acoes: [{ rotulo: '💧 Tomei um copo', acao: 'agua' }, ...acoesDispensar] };
+  }
+  if (h >= 7 && h < 12 && humor == null && livre('humor')) return { chave: 'humor', estado: 'feliz', fala: 'Bom dia! Como você está hoje? Me conta aqui embaixo, que o treino se ajusta.', acoes: [{ rotulo: 'Vou contar', acao: 'humor' }, ...acoesDispensar] };
+
+  const refeicao = LUA_REFEICOES.find(r => h >= r.de && h < r.ate && livre(r.chave));
+  if (refeicao) return { chave: refeicao.chave, estado: 'fome', fala: refeicao.fala, acoes: [{ rotulo: 'Já comi', acao: 'feito' }, ...acoesDispensar] };
+
+  if (h >= 9 && h < 21 && !treinou && treino.intensity !== 'descanso' && livre('treino')) return { chave: 'treino', estado: 'feliz', fala: `Bora mexer o corpo? Hoje é: ${treino.title}.`, acoes: [{ rotulo: 'Ver o treino', acao: 'treino' }, ...acoesDispensar] };
+  if (h >= 10 && h < 15 && livre('sol')) return { chave: 'sol', estado: 'feliz', fala: 'Eu só apareço de noite, mas você precisa de sol! Pegou uns 10 minutinhos hoje?', acoes: [{ rotulo: 'Peguei', acao: 'feito' }, ...acoesDispensar] };
+  if (h >= 15 && h < 18.5 && livre('alongar')) return { chave: 'alongar', estado: 'feliz', fala: 'Tô toda dura de ficar parada! Vamos levantar e alongar um minutinho?', acoes: [{ rotulo: 'Alonguei', acao: 'feito' }, ...acoesDispensar] };
+
+  if (treinou) return { chave: 'orgulho', estado: 'orgulhosa', fala: 'A gente treinou hoje! Tô muito orgulhosa de você.', acoes: [] };
+  if (copos >= AGUA_META_COPOS) return { chave: 'orgulho', estado: 'orgulhosa', fala: 'Bateu a meta de água! Tô até brilhando.', acoes: [] };
+  const fase = getCurrentPhase();
+  const porFase = fase && LUA_POR_FASE[fase.phase.id];
+  if (porFase) return { chave: 'fase', estado: porFase.estado, fala: porFase.falas[fase.day % porFase.falas.length], acoes: [] };
+  return { chave: 'oi', estado: 'feliz', fala: 'Tô aqui com você. Tudo certo por agora!', acoes: [] };
+}
+
+function salvarLua(mudanca) {
+  const p = getCurrentProfile();
+  updateCurrentProfile({ mascote: { ...dadosLua(p), ...mudanca } });
+}
+function luaReagir(estado, fala) {
+  clearTimeout(luaReacaoTimer);
+  luaReacao = { estado, fala };
+  renderMascote();
+  luaReacaoTimer = setTimeout(() => { luaReacao = null; renderMascote(); }, 4000);
+}
+function definirAgua(copos) {
+  const p = getCurrentProfile();
+  const m = dadosLua(p);
+  const hoje = dataLocal();
+  const antes = m.agua[hoje] || 0;
+  const novo = Math.max(0, Math.min(AGUA_META_COPOS, copos));
+  salvarLua({ agua: { ...m.agua, [hoje]: novo } });
+  // Meta batida marca (ou desmarca) a água na check-list do dia
+  if ((antes >= AGUA_META_COPOS) !== (novo >= AGUA_META_COPOS)) {
+    const atual = getCurrentProfile();
+    const fase = getCurrentPhase();
+    const checks = fase ? fase.phase.checks : DAILY_CHECKS_DEFAULT;
+    const i = checks.findIndex(c => /água|hidrata/i.test(c));
+    if (i >= 0) {
+      const dc = atual.daily_checks || {};
+      dc[todayKey()] = { ...(dc[todayKey()] || {}), [i]: novo >= AGUA_META_COPOS };
+      updateCurrentProfile({ daily_checks: dc });
+      buildDailyChecks();
+    }
+  }
+  if (novo > antes) luaReagir(novo >= AGUA_META_COPOS ? 'orgulhosa' : 'feliz', novo >= AGUA_META_COPOS ? 'Bateu a meta de água! Tô até brilhando.' : 'Ahhh, que delícia! Obrigada.');
+  else renderMascote();
+}
+function acaoLua(acao, chave) {
+  const m = dadosLua(getCurrentProfile());
+  const hoje = dataLocal();
+  if (acao === 'agua') return definirAgua((m.agua[hoje] || 0) + 1);
+  if (acao === 'feito') {
+    salvarLua({ feitos: { [hoje]: { ...(m.feitos[hoje] || {}), [chave]: true } } });
+    return luaReagir('feliz', chave === 'dormir' ? 'Boa noite! Sonha com coisa boa.' : chave === 'cuidado' ? 'Tô aqui, viu?' : 'Eba! Fiquei feliz.');
+  }
+  if (acao === 'adiar') {
+    salvarLua({ adiados: { ...m.adiados, [chave]: Date.now() + ADIAR_MS } });
+    return luaReagir('feliz', 'Tudo bem! Te lembro mais tarde.');
+  }
+  if (acao === 'treino') return openTab('treino');
+  if (acao === 'humor') document.getElementById('mood-grid-dash').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function carinhoNaLua() {
+  luaReagir('feliz', LUA_CARINHOS[Math.floor(Math.random() * LUA_CARINHOS.length)]);
+}
+function renomearLua() {
+  const nome = prompt('Como você quer chamar sua mascote?', dadosLua(getCurrentProfile()).nome);
+  if (nome === null) return;
+  salvarLua({ nome: nome.trim().slice(0, 20) || 'Lua' });
+  renderMascote();
+}
+
+function svgLua(estado) {
+  const olhoAberto = '<g class="lua-olhos"><ellipse cx="46" cy="58" rx="5" ry="6.5" fill="#2a1a4e"/><ellipse cx="74" cy="58" rx="5" ry="6.5" fill="#2a1a4e"/><circle cx="48" cy="55.5" r="1.8" fill="#fff"/><circle cx="76" cy="55.5" r="1.8" fill="#fff"/></g>';
+  const olhos = {
+    feliz: olhoAberto,
+    fome: olhoAberto,
+    sede: '<path d="M39 57l11-4M81 57l-11-4" stroke="#2a1a4e" stroke-width="2.4" stroke-linecap="round"/><ellipse cx="46" cy="62" rx="4.5" ry="5.5" fill="#2a1a4e"/><ellipse cx="74" cy="62" rx="4.5" ry="5.5" fill="#2a1a4e"/><circle cx="47.5" cy="60" r="1.5" fill="#fff"/><circle cx="75.5" cy="60" r="1.5" fill="#fff"/>',
+    sono: '<path d="M40 59q6 5 12 0M68 59q6 5 12 0" stroke="#2a1a4e" stroke-width="3" fill="none" stroke-linecap="round"/>',
+    orgulhosa: '<path d="M40 60q6-8 12 0M68 60q6-8 12 0" stroke="#2a1a4e" stroke-width="3" fill="none" stroke-linecap="round"/>',
+    dengosa: '<path d="M39 54l10-3M81 54l-10-3" stroke="#2a1a4e" stroke-width="2.2" stroke-linecap="round"/><path d="M40 60q6 5 12 0M68 60q6 5 12 0" stroke="#2a1a4e" stroke-width="3" fill="none" stroke-linecap="round"/>'
+  }[estado];
+  const boca = {
+    feliz: '<path d="M52 70q8 8 16 0" stroke="#2a1a4e" stroke-width="2.8" fill="none" stroke-linecap="round"/>',
+    fome: '<ellipse cx="60" cy="73" rx="6.5" ry="5.5" fill="#2a1a4e"/><path d="M71 69c2 4 3 6 0 8c-3-2-2-4 0-8z" fill="#7dd3fc"/>',
+    sede: '<path d="M52 72q8-5 16 0" stroke="#2a1a4e" stroke-width="2.8" fill="none" stroke-linecap="round"/><path d="M56 71.5h8v4a4 4 0 0 1-8 0z" fill="#f472b6"/>',
+    sono: '<ellipse cx="60" cy="72" rx="3.5" ry="3" fill="#2a1a4e"/>',
+    orgulhosa: '<path d="M50 68q10 13 20 0z" fill="#2a1a4e"/>',
+    dengosa: '<path d="M54 72q6 4 12 0" stroke="#2a1a4e" stroke-width="2.8" fill="none" stroke-linecap="round"/>'
+  }[estado];
+  const bracos = estado === 'orgulhosa'
+    ? '<path d="M24 52q-9-9-7-21M96 52q9-9 7-21" stroke="#cdb6f5" stroke-width="7" fill="none" stroke-linecap="round"/>'
+    : '<path d="M22 72q-7 5-8 12M98 72q7 5 8 12" stroke="#cdb6f5" stroke-width="7" fill="none" stroke-linecap="round"/>';
+  const extra = {
+    feliz: '',
+    fome: '',
+    sede: '<path class="lua-gota" d="M101 26c5 7 8 11 8 15a8 8 0 0 1-16 0c0-4 3-8 8-15z" fill="#38bdf8"/>',
+    sono: '<path d="M30 33q14-27 44-14l-6 6q-20-7-34 13z" fill="#818cf8"/><circle cx="76" cy="17" r="5" fill="#fff"/><text x="92" y="30" font-size="15" font-weight="700" fill="#a5b4fc">z</text><text x="104" y="18" font-size="11" font-weight="700" fill="#a5b4fc">z</text>',
+    orgulhosa: '<path d="M60 2l2.6 7 7 2.6-7 2.6-2.6 7-2.6-7-7-2.6 7-2.6zM104 14l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8zM16 12l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8z" fill="#fbbf24"/>',
+    dengosa: '<path d="M18 86q42-18 84 0q-4 26-42 26t-42-26z" fill="#c084fc"/><path d="M30 84v24M48 79v32M72 79v32M90 84v24" stroke="#a855f7" stroke-width="3"/>'
+  }[estado];
+  return `<svg viewBox="0 0 120 120" width="104" height="104" role="img" aria-label="Mascote Lua">
+    ${bracos}
+    <path d="M42 96v8M78 96v8" stroke="#cdb6f5" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="60" cy="62" r="40" fill="#e9dcff"/>
+    <circle cx="35" cy="42" r="7" fill="#d6c3f7"/><circle cx="84" cy="38" r="4.5" fill="#d6c3f7"/><circle cx="88" cy="80" r="5.5" fill="#d6c3f7"/><circle cx="33" cy="84" r="3.5" fill="#d6c3f7"/>
+    <ellipse cx="37" cy="69" rx="6.5" ry="4" fill="#f9a8d4" opacity=".75"/><ellipse cx="83" cy="69" rx="6.5" ry="4" fill="#f9a8d4" opacity=".75"/>
+    ${olhos}${boca}${extra}
+  </svg>`;
+}
+function renderMascote() {
+  const el = document.getElementById('mascote-lua');
+  const p = getCurrentProfile();
+  if (!el || !p) return;
+  const m = dadosLua(p);
+  const copos = m.agua[dataLocal()] || 0;
+  const pedido = pedidoDaLua(p);
+  const estado = luaReacao ? luaReacao.estado : pedido.estado;
+  const fala = luaReacao ? luaReacao.fala : pedido.fala;
+  const acoes = luaReacao ? [] : pedido.acoes;
+  const gotas = Array.from({ length: AGUA_META_COPOS }, (_, i) =>
+    `<button class="lua-copo${i < copos ? ' cheio' : ''}" onclick="definirAgua(${i + 1 === copos ? i : i + 1})" aria-label="${i + 1} copos">💧</button>`).join('');
+  el.innerHTML = `<div class="card lua-card">
+    <div class="lua-topo">
+      <button class="lua-bicho estado-${estado}" onclick="carinhoNaLua()" aria-label="Fazer carinho">${svgLua(estado)}</button>
+      <div class="lua-balao">
+        <div class="lua-nome">${escHtml(m.nome)} <button class="lua-renomear" onclick="renomearLua()" aria-label="Mudar o nome">✏️</button></div>
+        <p>${escHtml(fala)}</p>
+        ${acoes.length ? `<div class="lua-acoes">${acoes.map(a => `<button class="${a.acao === 'adiar' ? 'lua-btn-suave' : 'lua-btn'}" onclick="acaoLua('${a.acao}','${pedido.chave}')">${a.rotulo}</button>`).join('')}</div>` : ''}
+      </div>
+    </div>
+    <div class="lua-agua">
+      <div class="lua-agua-texto">Água hoje <strong>${copos} de ${AGUA_META_COPOS} copos</strong></div>
+      <div class="lua-copos">${gotas}</div>
+    </div>
+  </div>`;
+}
+// A fala depende da hora: atualiza com o app aberto e ao voltar para ele
+setInterval(() => { if (!luaReacao) renderMascote(); }, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !luaReacao) renderMascote(); });
 
 function buildDailyChecks() {
   const p = getCurrentProfile();
@@ -2533,6 +2768,7 @@ function buildEverything() {
   buildWeek();
   rebuildWorkout();
   buildDailyChecks();
+  renderMascote();
   buildNutritionStats();
   buildMenuOptions();
   buildSuperfoods();
