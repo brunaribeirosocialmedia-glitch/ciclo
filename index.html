@@ -2491,10 +2491,16 @@ function chaveParaBytes(b64) {
   const texto = atob(b64.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(b64.length / 4) * 4, '='));
   return Uint8Array.from(texto, c => c.charCodeAt(0));
 }
+// O iPhone às vezes demora ou não responde: depois de 2,5 s segue como se não houvesse resposta
 async function inscricaoAtual() {
   if (!avisosSuportados()) return null;
-  const reg = await navigator.serviceWorker.getRegistration();
-  return reg ? reg.pushManager.getSubscription() : null;
+  const perguntar = async () => {
+    const reg = await navigator.serviceWorker.getRegistration();
+    return reg ? reg.pushManager.getSubscription() : null;
+  };
+  const limite = new Promise(ok => setTimeout(() => ok(null), 2500));
+  try { return await Promise.race([perguntar(), limite]); }
+  catch (e) { console.warn('[Ciclo] avisos', e); return null; }
 }
 function salvarAparelho(inscricao) {
   const j = inscricao.toJSON();
@@ -2576,23 +2582,27 @@ async function renderAvisos() {
     el.innerHTML = '<p class="avisos-texto">As notificações estão bloqueadas. No iPhone, vá em <strong>Ajustes → Notificações → Ciclo</strong> e permita. Depois volte aqui.</p>';
     return;
   }
-  const inscricao = await inscricaoAtual();
-  if (!inscricao && !localStorage.getItem(ST_AVISOS)) {
-    el.innerHTML = `<p class="avisos-texto">${nome} te avisa de água, comida, treino e hora de dormir, mesmo com o app fechado. No máximo 5 por dia, e só o que você ainda não marcou.</p>
+  const pintar = () => {
+    if (!localStorage.getItem(ST_AVISOS)) {
+      el.innerHTML = `<p class="avisos-texto">${nome} te avisa de água, comida, treino e hora de dormir, mesmo com o app fechado. No máximo 5 por dia, e só o que você ainda não marcou.</p>
       <button class="btn btn-sm" onclick="ligarAvisos()">🔔 Ligar avisos</button>${msg}`;
-    return;
-  }
-  if (inscricao) {
-    localStorage.setItem(ST_AVISOS, inscricao.endpoint);
-    if (usuarioAtual) salvarAparelho(inscricao).then(null, () => {});
-  }
-  const preferencias = dadosLua(p).avisos;
-  el.innerHTML = `<p class="avisos-texto">Avisos ligados neste aparelho. No máximo 5 por dia, e só o que você ainda não marcou.</p>
+      return;
+    }
+    const preferencias = dadosLua(p).avisos;
+    el.innerHTML = `<p class="avisos-texto">Avisos ligados neste aparelho. No máximo 5 por dia, e só o que você ainda não marcou.</p>
     ${TIPOS_AVISO.map(t => `<label class="aviso-tipo"><input type="checkbox" ${preferencias[t.id] !== false ? 'checked' : ''} onchange="alternarAviso('${t.id}',this.checked)"><span><strong>${t.nome}</strong><small>${t.quando}</small></span></label>`).join('')}
     <div class="avisos-botoes">
       <button class="btn btn-sm" onclick="testarAviso()">Testar</button>
       <button class="link-btn" onclick="desligarAvisos()">Desligar neste aparelho</button>
     </div>${msg}`;
+  };
+  pintar(); // aparece na hora, com o que este aparelho já sabe
+  const inscricao = await inscricaoAtual();
+  if (!inscricao) return;
+  const novo = localStorage.getItem(ST_AVISOS) !== inscricao.endpoint;
+  localStorage.setItem(ST_AVISOS, inscricao.endpoint);
+  if (usuarioAtual) salvarAparelho(inscricao).then(null, () => {});
+  if (novo) pintar();
 }
 
 function buildDailyChecks() {
