@@ -4,6 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <meta name="theme-color" content="#0f0f13" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/icone-180.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Ciclo" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Ciclo — Treino que respeita o seu corpo</title>
 <style>
   :root {
@@ -315,6 +321,19 @@
   @keyframes lua-pingar { 0% { transform: translateY(-3px); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateY(9px); opacity: 0; } }
   @keyframes lua-piscar { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
   @media (prefers-reduced-motion: reduce) { .lua-bicho, .lua-gota, .lua-olhos { animation: none; } }
+
+  /* ── AVISOS DA LUA ── */
+  .lua-avisos-link { display: block; width: 100%; margin-top: 8px; padding: 8px; background: none; border: 0; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; }
+  .avisos-texto { font-size: 13px; line-height: 1.5; color: var(--muted); margin-bottom: 12px; }
+  .avisos-texto strong { color: var(--text); }
+  .avisos-passos { margin: 0 0 4px 20px; font-size: 13px; line-height: 1.5; }
+  .avisos-passos li { margin-bottom: 6px; }
+  .aviso-tipo { display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer; }
+  .aviso-tipo input { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+  .aviso-tipo strong { display: block; font-size: 13px; }
+  .aviso-tipo small { font-size: 11px; color: var(--muted); }
+  .avisos-botoes { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+  .avisos-msg { margin-top: 10px; font-size: 12px; color: var(--accent3); }
 
   /* ── RETOMADA E HISTÓRICO ── */
   .retomada-box { background: #0f3727; border: 1px solid var(--accent3); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.5; color: var(--text); }
@@ -731,6 +750,11 @@
   <div class="card">
     <div class="card-title">Meu perfil</div>
     <div id="profile-info"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Avisos da Lua 🌙</div>
+    <div id="avisos-lua"></div>
   </div>
 
   <div class="card">
@@ -1568,6 +1592,7 @@ function showApp() {
 }
 async function logout() {
   document.getElementById('header-menu').classList.remove('open');
+  await desligarAvisos(); // o aparelho não deve seguir recebendo avisos de quem saiu
   await enviarNuvem();
   await sb.auth.signOut();
   limparDadosLocais();
@@ -2260,7 +2285,7 @@ let luaReacaoTimer = null;
 
 function dadosLua(p) {
   const m = p.mascote || {};
-  return { nome: m.nome || 'Lua', agua: m.agua || {}, feitos: m.feitos || {}, adiados: m.adiados || {} };
+  return { nome: m.nome || 'Lua', agua: m.agua || {}, feitos: m.feitos || {}, adiados: m.adiados || {}, avisos: m.avisos || {} };
 }
 function escHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2434,11 +2459,140 @@ function renderMascote() {
       <div class="lua-agua-texto">Água hoje <strong>${copos} de ${AGUA_META_COPOS} copos</strong></div>
       <div class="lua-copos">${gotas}</div>
     </div>
+    ${localStorage.getItem(ST_AVISOS) ? '' : '<button class="lua-avisos-link" onclick="abrirAvisos()">🔔 Quero receber avisos da Lua</button>'}
   </div>`;
 }
 // A fala depende da hora: atualiza com o app aberto e ao voltar para ele
 setInterval(() => { if (!luaReacao) renderMascote(); }, 5 * 60 * 1000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !luaReacao) renderMascote(); });
+
+// ══════════════════════════════════════════════
+// AVISOS DA LUA (notificação com o app fechado)
+// A nuvem decide quando avisar: função ciclo-lua-avisos, no Supabase do Baluarte.
+// ══════════════════════════════════════════════
+const VAPID_PUBLICA = 'BFYZdKlm22te1NSKgMw71IP4VU9JCC3-x_2vC8k6MNzV6Xgpc2Co1rfQuhxZYTGji3kq7rWyU5ARntUMC2zsLP0';
+const ST_AVISOS = 'ciclo_avisos_ativos';
+const TIPOS_AVISO = [
+  { id: 'agua', nome: '💧 Água', quando: '10h30 e 16h, se os copos estiverem atrasados' },
+  { id: 'comida', nome: '🍽️ Comida', quando: '12h30 e 20h' },
+  { id: 'treino', nome: '💪 Treino', quando: '18h, se ainda não treinou' },
+  { id: 'dormir', nome: '😴 Hora de dormir', quando: '22h30' }
+];
+let avisosMensagem = '';
+
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(e => console.warn('[Ciclo] sw', e));
+}
+const avisosSuportados = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const appInstalado = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const ehIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+function chaveParaBytes(b64) {
+  const texto = atob(b64.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(b64.length / 4) * 4, '='));
+  return Uint8Array.from(texto, c => c.charCodeAt(0));
+}
+async function inscricaoAtual() {
+  if (!avisosSuportados()) return null;
+  const reg = await navigator.serviceWorker.getRegistration();
+  return reg ? reg.pushManager.getSubscription() : null;
+}
+function salvarAparelho(inscricao) {
+  const j = inscricao.toJSON();
+  return sb.from('ciclo_push_aparelhos').upsert({ endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth });
+}
+async function ligarAvisos() {
+  avisosMensagem = '';
+  try {
+    const permissao = await Notification.requestPermission();
+    if (permissao !== 'granted') return renderAvisos();
+    await navigator.serviceWorker.register('sw.js');
+    const reg = await navigator.serviceWorker.ready;
+    const inscricao = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chaveParaBytes(VAPID_PUBLICA) });
+    const { error } = await salvarAparelho(inscricao);
+    if (error) { await inscricao.unsubscribe(); throw error; }
+    localStorage.setItem(ST_AVISOS, '1');
+    avisosMensagem = 'Avisos ligados! Toque em "Testar" para ver como chegam.';
+  } catch (e) {
+    console.warn('[Ciclo] avisos', e);
+    avisosMensagem = 'Não consegui ligar os avisos. Confira a internet e tente de novo.';
+  }
+  renderAvisos();
+  renderMascote();
+}
+async function desligarAvisos() {
+  avisosMensagem = '';
+  try {
+    const inscricao = await inscricaoAtual();
+    if (inscricao) {
+      await sb.from('ciclo_push_aparelhos').delete().eq('endpoint', inscricao.endpoint);
+      await inscricao.unsubscribe();
+    }
+  } catch (e) { console.warn('[Ciclo] avisos', e); }
+  localStorage.removeItem(ST_AVISOS);
+  renderAvisos();
+  renderMascote();
+}
+async function testarAviso() {
+  avisosMensagem = 'Mandando…';
+  renderAvisos();
+  const { data, error } = await sb.functions.invoke('ciclo-lua-avisos', { body: { teste: true } });
+  if (error) console.warn('[Ciclo] teste', error);
+  avisosMensagem = !error && data && data.entregues
+    ? 'Enviado! Deve chegar em alguns segundos. Se o app estiver aberto, feche para ver.'
+    : 'O aviso de teste não foi entregue. Me conta que eu olho o que houve.';
+  renderAvisos();
+}
+function alternarAviso(tipo, ligado) {
+  const m = dadosLua(getCurrentProfile());
+  salvarLua({ avisos: { ...m.avisos, [tipo]: ligado } });
+}
+function abrirAvisos() {
+  openTab('perfil');
+  const el = document.getElementById('avisos-lua');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+async function renderAvisos() {
+  const el = document.getElementById('avisos-lua');
+  const p = getCurrentProfile();
+  if (!el || !p) return;
+  const nome = escHtml(dadosLua(p).nome);
+  const msg = avisosMensagem ? `<p class="avisos-msg">${escHtml(avisosMensagem)}</p>` : '';
+
+  if (ehIOS() && !appInstalado()) {
+    el.innerHTML = `<p class="avisos-texto">No iPhone, os avisos só funcionam com o Ciclo na tela de início:</p>
+      <ol class="avisos-passos">
+        <li>Abra este link no <strong>Safari</strong>.</li>
+        <li>Toque em <strong>compartilhar</strong> (o quadrado com a setinha).</li>
+        <li>Toque em <strong>Adicionar à Tela de Início</strong>.</li>
+        <li>Abra o Ciclo pelo novo ícone, entre com a sua conta e volte aqui.</li>
+      </ol>`;
+    return;
+  }
+  if (!avisosSuportados()) {
+    el.innerHTML = '<p class="avisos-texto">Este navegador não recebe notificações. Se o iPhone for anterior ao iOS 16.4, atualize o sistema.</p>';
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    el.innerHTML = '<p class="avisos-texto">As notificações estão bloqueadas. No iPhone, vá em <strong>Ajustes → Notificações → Ciclo</strong> e permita. Depois volte aqui.</p>';
+    return;
+  }
+  const inscricao = await inscricaoAtual();
+  if (!inscricao) {
+    localStorage.removeItem(ST_AVISOS);
+    el.innerHTML = `<p class="avisos-texto">${nome} te avisa de água, comida, treino e hora de dormir, mesmo com o app fechado. No máximo 5 por dia, e só o que você ainda não marcou.</p>
+      <button class="btn btn-sm" onclick="ligarAvisos()">🔔 Ligar avisos</button>${msg}`;
+    return;
+  }
+  localStorage.setItem(ST_AVISOS, '1');
+  if (usuarioAtual) salvarAparelho(inscricao).catch(() => {});
+  const preferencias = dadosLua(p).avisos;
+  el.innerHTML = `<p class="avisos-texto">Avisos ligados neste aparelho. No máximo 5 por dia, e só o que você ainda não marcou.</p>
+    ${TIPOS_AVISO.map(t => `<label class="aviso-tipo"><input type="checkbox" ${preferencias[t.id] !== false ? 'checked' : ''} onchange="alternarAviso('${t.id}',this.checked)"><span><strong>${t.nome}</strong><small>${t.quando}</small></span></label>`).join('')}
+    <div class="avisos-botoes">
+      <button class="btn btn-sm" onclick="testarAviso()">Testar</button>
+      <button class="link-btn" onclick="desligarAvisos()">Desligar neste aparelho</button>
+    </div>${msg}`;
+}
 
 function buildDailyChecks() {
   const p = getCurrentProfile();
@@ -2711,6 +2865,7 @@ function renderChart() {
 // PROFILE TAB
 // ══════════════════════════════════════════════
 function renderProfileTab() {
+  renderAvisos();
   const p = getCurrentProfile();
   document.getElementById('profile-info').innerHTML = `
     <div class="profile-section-title">Identificação</div>
