@@ -882,7 +882,7 @@ const EX_LIBRARY = {
     { icon: '💪', name: 'Rosca isométrica na porta', muscle: 'Bíceps', sets: { leve: '3x 20s', medio: '3x 30s', forte: '4x 40s' }, tip: 'Puxa a porta na metade do movimento' }
   ],
   quadriceps: [
-    { icon: '🛋️', name: 'Afundo apoiado (sofá ou cama)', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 10 cada', medio: '3x 12 cada', forte: '4x 12 cada' }, tip: 'Mão no sofá ou na cama para não perder o equilíbrio' },
+    { icon: '🛋️', name: 'Afundo com pé apoiado (sofá ou cama)', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 10 cada', medio: '3x 12 cada', forte: '4x 12 cada' }, tip: 'Pé de trás no sofá ou na cama. Fique perto de uma parede para se segurar' },
     { icon: '🦵', name: 'Agachamento livre', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 12', medio: '4x 15–20', forte: '4x 20–25' }, tip: 'Desça abaixo de 90°' },
     { icon: '🎿', name: 'Agachamento búlgaro', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 8 cada', medio: '3x 10 cada', forte: '4x 12 cada' }, tip: 'Pé traseiro no banco' },
     { icon: '🔁', name: 'Avanço alternado', muscle: 'Quadríceps / Equilíbrio', sets: { leve: '3x 10 cada', medio: '3x 12 cada', forte: '4x 15 cada' }, tip: 'Joelho de trás quase toca o chão' },
@@ -1043,7 +1043,7 @@ const MOODS = [
 // mistake: principal erro a evitar
 const EX_EXTRA = {
   'Flexão com apoio do joelho':       { desc:'Mãos na largura dos ombros e joelhos no chão, corpo reto dos joelhos à cabeça. Desça devagar e empurre de volta.', mistake:'Empinar o quadril: o tronco desce inteiro, junto' },
-  'Afundo apoiado (sofá ou cama)':    { desc:'De lado para o sofá ou a cama, com uma mão apoiada. Dê um passo à frente, desça até onde for confortável e suba. Faça todas de um lado e troque.', mistake:'Joelho da frente caindo para dentro: mantenha alinhado com o pé' },
+  'Afundo com pé apoiado (sofá ou cama)':    { desc:'De costas para o sofá ou a cama, apoie o peito do pé de trás nele e deixe o pé da frente bem à frente. Desça até onde for confortável e suba. Faça todas de um lado e troque.', mistake:'Joelho da frente caindo para dentro: mantenha alinhado com o pé' },
   'Abdominal alternado (mão e perna opostas)': { desc:'Deitada de costas, levante a mão direita e a perna esquerda ao mesmo tempo, volte devagar e troque de lado. Uma ida de cada lado conta como 1.', mistake:'Fazer com pressa: a lombar sai do chão e o abdômen trabalha menos' },
   'Abdominal curto':                  { desc:'Deitada com os joelhos dobrados, suba só os ombros, sem puxar o pescoço, e desça devagar.', mistake:'Puxar a cabeça com as mãos: olhe para o teto' },
   'Prancha com joelhos no chão':      { desc:'Cotovelos sob os ombros e joelhos no chão, corpo reto dos joelhos à cabeça. Respire normalmente.', mistake:'Prender a respiração' },
@@ -1113,13 +1113,13 @@ const EX_ATE_FASE_3 = new Set(['Flexão de braço','Avanço alternado','Remada i
 // Na fase 1 estes grupos só têm os exercícios mais fáceis
 const FASE1_SO = {
   peito: ['Flexão com apoio do joelho'],
-  quadriceps: ['Afundo apoiado (sofá ou cama)'],
+  quadriceps: ['Afundo com pé apoiado (sofá ou cama)'],
   core: ['Abdominal alternado (mão e perna opostas)','Abdominal curto','Prancha com joelhos no chão','Dead bug']
 };
 // Séries da fase 1 (quem não está aqui usa o leve com 2 séries)
 const FASE1_SERIES = {
   'Flexão com apoio do joelho': '2x 5–7',
-  'Afundo apoiado (sofá ou cama)': '2x 8–12 cada',
+  'Afundo com pé apoiado (sofá ou cama)': '2x 8–12 cada',
   'Abdominal alternado (mão e perna opostas)': '2x 5 cada',
   'Abdominal curto': '2x 8',
   'Prancha com joelhos no chão': '2x 15s',
