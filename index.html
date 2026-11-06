@@ -853,6 +853,7 @@ function renderProfileGoalInfo() {
 // Exercise library (grouped, varied)
 const EX_LIBRARY = {
   peito: [
+    { icon: '🤸', name: 'Flexão com apoio do joelho', muscle: 'Peitoral / Tríceps', sets: { leve: '3x 6–8', medio: '3x 8–10', forte: '4x 10–12' }, tip: 'Joelhos num tapete ou toalha dobrada' },
     { icon: '🤸', name: 'Flexão de braço', muscle: 'Peitoral / Tríceps', sets: { leve: '3x 6–8', medio: '4x 8–12', forte: '4x 12–15' }, tip: 'Joelhos no chão se precisar' },
     { icon: '🤸', name: 'Flexão diamante', muscle: 'Tríceps / Peitoral', sets: { leve: '3x 6', medio: '3x 8–10', forte: '4x 10–12' }, tip: 'Mãos formam um losango embaixo do peito' },
     { icon: '🤸', name: 'Flexão declinada (pés no banco)', muscle: 'Peitoral superior', sets: { leve: '3x 6', medio: '3x 8', forte: '4x 10' }, tip: 'Pés elevados em sofá ou cama' },
@@ -881,6 +882,7 @@ const EX_LIBRARY = {
     { icon: '💪', name: 'Rosca isométrica na porta', muscle: 'Bíceps', sets: { leve: '3x 20s', medio: '3x 30s', forte: '4x 40s' }, tip: 'Puxa a porta na metade do movimento' }
   ],
   quadriceps: [
+    { icon: '🛋️', name: 'Afundo apoiado (sofá ou cama)', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 10 cada', medio: '3x 12 cada', forte: '4x 12 cada' }, tip: 'Mão no sofá ou na cama para não perder o equilíbrio' },
     { icon: '🦵', name: 'Agachamento livre', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 12', medio: '4x 15–20', forte: '4x 20–25' }, tip: 'Desça abaixo de 90°' },
     { icon: '🎿', name: 'Agachamento búlgaro', muscle: 'Quadríceps / Glúteos', sets: { leve: '3x 8 cada', medio: '3x 10 cada', forte: '4x 12 cada' }, tip: 'Pé traseiro no banco' },
     { icon: '🔁', name: 'Avanço alternado', muscle: 'Quadríceps / Equilíbrio', sets: { leve: '3x 10 cada', medio: '3x 12 cada', forte: '4x 15 cada' }, tip: 'Joelho de trás quase toca o chão' },
@@ -903,6 +905,9 @@ const EX_LIBRARY = {
     { icon: '🏔️', name: 'Elevação de panturrilha no degrau', muscle: 'Panturrilha', sets: { leve: '3x 15', medio: '4x 20', forte: '4x 25' }, tip: 'Desça abaixo do degrau' }
   ],
   core: [
+    { icon: '🌀', name: 'Abdominal alternado (mão e perna opostas)', muscle: 'Abdômen / Oblíquos', sets: { leve: '2x 8 cada', medio: '3x 8 cada', forte: '3x 10 cada' }, tip: 'Mão direita com perna esquerda, depois troca' },
+    { icon: '🌀', name: 'Abdominal curto', muscle: 'Abdômen', sets: { leve: '3x 10', medio: '3x 12', forte: '3x 15' }, tip: 'Só os ombros saem do chão' },
+    { icon: '🧘', name: 'Prancha com joelhos no chão', muscle: 'Core', sets: { leve: '3x 20s', medio: '3x 30s', forte: '3x 40s' }, tip: 'Quadril alinhado, sem empinar' },
     { icon: '🧘', name: 'Prancha', muscle: 'Core', sets: { leve: '3x 30s', medio: '3x 45s', forte: '4x 60s' }, tip: 'Quadril alinhado' },
     { icon: '🌀', name: 'Bicicleta abdominal', muscle: 'Oblíquos / Reto', sets: { leve: '3x 15', medio: '3x 20', forte: '4x 25' }, tip: 'Cotovelo toca joelho oposto' },
     { icon: '🌀', name: 'Russian twist', muscle: 'Oblíquos', sets: { leve: '3x 15', medio: '3x 20', forte: '4x 25' }, tip: 'Pés no ar pra mais intensidade' },
@@ -1037,6 +1042,11 @@ const MOODS = [
 // desc: como executar (máx 2 linhas)
 // mistake: principal erro a evitar
 const EX_EXTRA = {
+  'Flexão com apoio do joelho':       { desc:'Mãos na largura dos ombros e joelhos no chão, corpo reto dos joelhos à cabeça. Desça devagar e empurre de volta.', mistake:'Empinar o quadril: o tronco desce inteiro, junto' },
+  'Afundo apoiado (sofá ou cama)':    { desc:'De lado para o sofá ou a cama, com uma mão apoiada. Dê um passo à frente, desça até onde for confortável e suba. Faça todas de um lado e troque.', mistake:'Joelho da frente caindo para dentro: mantenha alinhado com o pé' },
+  'Abdominal alternado (mão e perna opostas)': { desc:'Deitada de costas, levante a mão direita e a perna esquerda ao mesmo tempo, volte devagar e troque de lado. Uma ida de cada lado conta como 1.', mistake:'Fazer com pressa: a lombar sai do chão e o abdômen trabalha menos' },
+  'Abdominal curto':                  { desc:'Deitada com os joelhos dobrados, suba só os ombros, sem puxar o pescoço, e desça devagar.', mistake:'Puxar a cabeça com as mãos: olhe para o teto' },
+  'Prancha com joelhos no chão':      { desc:'Cotovelos sob os ombros e joelhos no chão, corpo reto dos joelhos à cabeça. Respire normalmente.', mistake:'Prender a respiração' },
   'Flexão de braço':                  { desc:'Mãos na largura dos ombros, cotovelos a 45°. Desça até quase tocar o chão e suba com força.',                       mistake:'Cotovelos muito abertos — sobrecarregam o ombro' },
   'Flexão diamante':                  { desc:'Mãos formam um losango embaixo do peito. Desça devagar mantendo os cotovelos fechados.',                           mistake:'Deixar o quadril subir ou afundar durante o movimento' },
   'Flexão declinada (pés no banco)':  { desc:'Pés elevados em superfície firme. O ângulo trabalha a parte superior do peitoral.',                                 mistake:'Não contrair o core — lombar fica arqueada demais' },
@@ -1098,17 +1108,42 @@ const EX_EXTRA = {
 // Exercícios que ficam de fora enquanto o modo retomada está ligado
 const EX_DIFICIL = new Set(['Flexão diamante','Flexão declinada (pés no banco)','Flexão archer','Flexão fechada (mãos juntas)','Chin-up negativo','Pike push-up','Agachamento búlgaro','Hollow hold']);
 const EX_IMPACTO = new Set(['Agachamento com salto','Burpee','Pular corda (real ou simulada)','High knees']);
-// Duração pelo tempo parada; cada plano tem 3 fases de mesmo tamanho (ACSM: iniciante começa com 2–3 dias de força)
-//   fase 1: força 2x/semana, 2 séries, só leve · fase 2: força 3x/semana, leve · fase 3: força 4x/semana, até média
+// Fora da retomada até a fase 3: pedem mais força ou equilíbrio
+const EX_ATE_FASE_3 = new Set(['Flexão de braço','Avanço alternado','Remada invertida (mesa ou barra baixa)','Ponte unilateral','Bicicleta abdominal','Russian twist','Prancha lateral']);
+// Na fase 1 estes grupos só têm os exercícios mais fáceis
+const FASE1_SO = {
+  peito: ['Flexão com apoio do joelho'],
+  quadriceps: ['Afundo apoiado (sofá ou cama)'],
+  core: ['Abdominal alternado (mão e perna opostas)','Abdominal curto','Prancha com joelhos no chão','Dead bug']
+};
+// Séries da fase 1 (quem não está aqui usa o leve com 2 séries)
+const FASE1_SERIES = {
+  'Flexão com apoio do joelho': '2x 5–7',
+  'Afundo apoiado (sofá ou cama)': '2x 8–12 cada',
+  'Abdominal alternado (mão e perna opostas)': '2x 5 cada',
+  'Abdominal curto': '2x 8',
+  'Prancha com joelhos no chão': '2x 15s',
+  'Dead bug': '2x 4 cada',
+  'Superman': '2x 8',
+  'Bird dog': '2x 5 cada',
+  'Ponte de glúteo': '2x 10',
+  'Abdução de quadril deitada': '2x 10',
+  'Kickback (chute pra trás)': '2x 8 cada',
+  'Hip thrust no banco': '2x 10',
+  'Elevação de panturrilha no degrau': '2x 10'
+};
+// Cada plano tem 3 fases. Sobe de fase ao completar os treinos marcados como feitos,
+// respeitando um tempo mínimo para o corpo se adaptar (ACSM: iniciante começa com 2–3 dias de força)
+//   fase 1: força 2x/semana, 2 séries · fase 2: força 3x/semana, leve · fase 3: força 4x/semana, até média
 const RETOMADA_OPCOES = [
-  { meses: 2,  rotulo: 'Menos de 3 meses', semanas: 4 },
-  { meses: 6,  rotulo: 'De 3 meses a 1 ano', semanas: 8 },
-  { meses: 24, rotulo: 'Mais de 1 ano', semanas: 12 }
+  { meses: 2,  rotulo: 'Menos de 3 meses', semanas: 4, treinosFase: 6, semanasFase: 1 },
+  { meses: 6,  rotulo: 'De 3 meses a 1 ano', semanas: 8, treinosFase: 10, semanasFase: 2 },
+  { meses: 24, rotulo: 'Mais de 1 ano', semanas: 12, treinosFase: 16, semanasFase: 4 }
 ];
 const RETOMADA_FASES = {
-  1: { forca: 2, caminhada: '15min', texto: 'Força 2 vezes por semana (segunda e quinta), com 2 séries de cada exercício. Nos outros dias, caminhada e alongamento. O foco é criar o hábito e acordar o corpo.' },
-  2: { forca: 3, caminhada: '20min', texto: 'Força 3 vezes por semana (segunda, quarta e sexta), ainda leve. Caminhada e alongamento nos outros dias.' },
-  3: { forca: 4, caminhada: '25min', texto: 'Força 4 vezes por semana, alternando superior e inferior, já podendo chegar à intensidade média.' }
+  1: { forca: 2, caminhada: '15min', texto: 'Só exercícios fáceis. Força 2 vezes por semana (segunda e quinta), com 2 séries curtas. Nos outros dias, caminhada e alongamento. Abdominal leve todo dia.' },
+  2: { forca: 3, caminhada: '20min', texto: 'Mais opções de exercício e mais repetições. Força 3 vezes por semana (segunda, quarta e sexta), ainda leve. Caminhada e alongamento nos outros dias. Abdominal todo dia.' },
+  3: { forca: 4, caminhada: '25min', texto: 'Força 4 vezes por semana, alternando superior e inferior, já podendo chegar à intensidade média. Abdominal todo dia.' }
 };
 
 function dataLocal(d) {
@@ -1121,19 +1156,30 @@ function getRetomadaSemana() {
   const dias = Math.floor((new Date(dataLocal() + 'T12:00') - new Date(p.retomada.inicio + 'T12:00')) / 86400000);
   return Math.floor(Math.max(dias, 0) / 7) + 1;
 }
-// { semana, total, fase (1–3), concluida } ou null se o modo estiver desligado
+// { fase (1–3), concluida, feitos, meta, liberaEm } ou null se o modo estiver desligado
 function getRetomadaPlano() {
   const semana = getRetomadaSemana();
   if (semana === null) return null;
-  const meses = getCurrentProfile().retomada.meses_parada || 24;
-  const total = (RETOMADA_OPCOES.find(o => meses <= o.meses) || RETOMADA_OPCOES[2]).semanas;
-  const fase = semana <= total / 3 ? 1 : semana <= total * 2 / 3 ? 2 : 3;
-  return { semana, total, fase, concluida: semana > total };
+  const p = getCurrentProfile();
+  const { inicio, meses_parada } = p.retomada;
+  const opcao = RETOMADA_OPCOES.find(o => (meses_parada || 24) <= o.meses) || RETOMADA_OPCOES[2];
+  const hoje = dataLocal();
+  const datas = Object.keys(p.workout_log || {}).filter(k => k >= inicio && k <= hoje);
+  const feitos = datas.length;
+  // O treino de hoje só conta a partir de amanhã, senão o treino mudaria ao marcar como feito
+  const anteriores = datas.filter(k => k < hoje).length;
+  const dias = Math.max(Math.floor((new Date(hoje + 'T12:00') - new Date(inicio + 'T12:00')) / 86400000), 0);
+  const nivel = Math.min(Math.floor(anteriores / opcao.treinosFase), Math.floor(dias / (7 * opcao.semanasFase))) + 1;
+  const fase = Math.min(nivel, 3);
+  const libera = new Date(inicio + 'T12:00');
+  libera.setDate(libera.getDate() + 7 * opcao.semanasFase * fase);
+  return { fase, concluida: nivel > 3, feitos, meta: opcao.treinosFase * fase, liberaEm: dataLocal(libera) };
 }
-// Na fase 1 todo exercício fica com 2 séries
+// Na fase 1 os exercícios têm as próprias quantidades, sempre com 2 séries
 function seriesDe(ex) {
   const txt = ex.sets[ex.usedIntensity] || ex.sets.medio;
   const plano = getRetomadaPlano();
+  if (plano && plano.fase === 1 && !plano.concluida && FASE1_SERIES[ex.name]) return FASE1_SERIES[ex.name];
   return plano && plano.fase === 1 && !plano.concluida && ex.name !== CORDA_ROTULO ? txt.replace(/^\d+x/, '2x') : txt;
 }
 let retomadaEscolhendo = false;
@@ -1155,16 +1201,23 @@ function renderRetomadaStatus() {
   const plano = getRetomadaPlano();
   if (!plano) {
     el.innerHTML = retomadaEscolhendo
-      ? `<div class="retomada-box"><strong>🌱 Há quanto tempo você está sem treinar?</strong><br>O plano começa leve e vai aumentando. Quanto mais tempo parada, mais longo ele fica.
-          <div style="display:grid;gap:8px;margin-top:10px">${RETOMADA_OPCOES.map(o => `<button class="btn btn-outline" style="border-color:var(--accent3);color:var(--accent3)" onclick="ligarRetomada(${o.meses})">${o.rotulo} · ${o.semanas} semanas</button>`).join('')}</div>
+      ? `<div class="retomada-box"><strong>🌱 Há quanto tempo você está sem treinar?</strong><br>O plano começa leve e aumenta conforme você marca os treinos como feitos. Quanto mais tempo parada, mais longo ele fica.
+          <div style="display:grid;gap:8px;margin-top:10px">${RETOMADA_OPCOES.map(o => `<button class="btn btn-outline" style="border-color:var(--accent3);color:var(--accent3)" onclick="ligarRetomada(${o.meses})">${o.rotulo} · cerca de ${o.semanas} semanas</button>`).join('')}</div>
           <button class="link-btn" style="margin-top:8px" onclick="retomadaEscolhendo=false;renderRetomadaStatus()">Cancelar</button></div>`
       : `<button class="btn btn-outline" style="margin-bottom:10px;border-color:var(--accent3);color:var(--accent3)" onclick="ligarRetomada()">🌱 Estou voltando a treinar depois de um tempo parada</button>`;
     return;
   }
+  const faltam = Math.max(plano.meta - plano.feitos, 0);
+  const proxima = plano.fase === 3 ? 'o fim da retomada' : `a fase ${plano.fase + 1}`;
+  const progresso = faltam
+    ? `${plano.feitos} de ${plano.meta} treinos feitos. ${faltam === 1 ? 'Falta 1 treino' : `Faltam ${faltam} treinos`} para ${proxima}.`
+    : plano.liberaEm > dataLocal()
+      ? `${plano.feitos} treinos feitos. Meta batida! Para o corpo se adaptar, ${proxima} chega em ${plano.liberaEm.split('-').reverse().slice(0, 2).join('/')}.`
+      : `${plano.feitos} treinos feitos. Meta batida! Amanhã você chega a ${proxima}.`;
   const texto = plano.concluida
-    ? `Você completou as ${plano.total} semanas de retomada. Se estiver se sentindo bem, desligue o modo para liberar o treino completo.`
-    : RETOMADA_FASES[plano.fase].texto;
-  const titulo = plano.concluida ? 'Retomada concluída 🎉' : `Modo retomada · semana ${plano.semana} de ${plano.total} · fase ${plano.fase} de 3`;
+    ? 'Você completou a retomada. Se estiver se sentindo bem, desligue o modo para liberar o treino completo.'
+    : `${RETOMADA_FASES[plano.fase].texto}<br><br>${progresso}`;
+  const titulo = plano.concluida ? 'Retomada concluída 🎉' : `Modo retomada · fase ${plano.fase} de 3`;
   el.innerHTML = `<div class="retomada-box"><strong>🌱 ${titulo}</strong><br>${texto}<br><button class="link-btn" onclick="desligarRetomada()">Desligar modo retomada</button></div>`;
 }
 
@@ -1652,6 +1705,10 @@ function pickFromGroup(group, count, rand) {
     // Retomada concluída: quem gosta de corda volta a tê-la nos dias de cardio
     const cordaLiberada = planoR.concluida && gostaDeCorda();
     arr = arr.filter(e => !EX_DIFICIL.has(e.name) && (!EX_IMPACTO.has(e.name) || (cordaLiberada && e.name === CORDA_ROTULO)));
+    if (!planoR.concluida) {
+      if (planoR.fase < 3) arr = arr.filter(e => !EX_ATE_FASE_3.has(e.name));
+      if (planoR.fase === 1 && FASE1_SO[group]) arr = arr.filter(e => FASE1_SO[group].includes(e.name));
+    }
   }
   const recentes = exerciciosRecentes();
   const novos = arr.filter(e => !recentes.has(e.name));
@@ -1662,6 +1719,19 @@ function pickFromGroup(group, count, rand) {
     return [corda, ...pickFromGroupLista(arr, count - 1, rand)];
   }
   return pickFromGroupLista(arr, count, rand);
+}
+// Retomada: abdominal todo dia. O favorito sempre entra; nos dias sem força entra um segundo tipo
+function abdominaisDoDia(exercises, focus, rand) {
+  const nomesCore = EX_LIBRARY.core.map(e => e.name);
+  const favorito = EX_LIBRARY.core[0];
+  const lista = [...exercises];
+  if (!lista.some(e => e.name === favorito.name)) lista.push(favorito);
+  const tipos = lista.filter(e => nomesCore.includes(e.name)).length;
+  if (['ativo', 'corda', 'mobilidade'].includes(focus) && tipos < 2) {
+    const outro = pickFromGroup('core', 3, rand).find(e => !lista.some(x => x.name === e.name));
+    if (outro) lista.push(outro);
+  }
+  return lista;
 }
 function pickFromGroupLista(arr, count, rand) {
   const result = [];
@@ -1797,7 +1867,7 @@ function generateTodayWorkout() {
       { ...caminhada, sets: { leve: tempo, medio: tempo, forte: tempo }, tip: 'Num ritmo em que dá pra conversar' },
       ...pickFromGroup('mobilidade', 3, rand)
     ];
-    title = 'Dia leve: caminhada e alongamento';
+    title = 'Dia leve: caminhada, alongamento e abdominal';
     desc = 'Dia de recuperação ativa. O corpo se adapta no descanso.';
   } else if (focus === 'mobilidade') {
     exercises = pickFromGroup('mobilidade', 5, rand);
@@ -1858,6 +1928,8 @@ function generateTodayWorkout() {
     title = 'Full Body Funcional';
     desc = 'Corpo todo em um só treino.';
   }
+
+  if (plano && !plano.concluida) exercises = abdominaisDoDia(exercises.filter(Boolean), focus, rand);
 
   return {
     title, desc,
